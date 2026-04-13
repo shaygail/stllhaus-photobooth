@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# STLL HAUS Photobooth
 
-## Getting Started
+Tablet-first photobooth built with Next.js 16 for in-person events.
 
-First, run the development server:
+Core flow:
+- `GET /booth` guest flow: welcome -> camera -> preview -> receipt -> print -> done
+- `GET /digital/[token]` guest keepsake page (view / download JPEG from QR)
+- `GET /receipt-preview` thermal layout playground
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS v4
+
+## Quick Start
+
+1. Install deps:
+
+```bash
+npm install
+```
+
+2. Copy env file and edit:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Set at least:
+- `BOOTH_PASSWORD` (required for staff login and booth access)
+- `NEXT_PUBLIC_BOOTH_PUBLIC_URL` (required for phone QR links in local/LAN testing)
+
+4. Start dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## LAN / iPad Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For iPad camera and QR-on-phone testing on local network:
 
-## Learn More
+```bash
+npm run dev:lan
+```
 
-To learn more about Next.js, take a look at the following resources:
+Then:
+- open the printed `https://...` URL on booth tablet/phone
+- trust the local certificate once in Safari (`Advanced -> Continue`)
+- ensure phone and Mac are on the same Wi-Fi
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Authentication Model
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `/booth` is protected by staff login (`/login`)
+- login sets a signed httpOnly cookie
+- booth-only API actions (creating slips, saving email) require authenticated session
+- guest keepsake links `/digital/[token]` remain public
 
-## Deploy on Vercel
+### Required env vars
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Variable | Required | Purpose |
+|---|---|---|
+| `BOOTH_PASSWORD` | Yes | Staff password for `/login` |
+| `BOOTH_SESSION_SECRET` | Optional | Cookie signing secret (recommended in production) |
+| `NEXT_PUBLIC_BOOTH_PUBLIC_URL` | Yes for LAN/QR | Public base URL used for QR destination |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Commands
+
+- `npm run dev` - local HTTP development
+- `npm run dev:lan` - LAN HTTPS development (recommended for iPad/Safari)
+- `npm run lint` - ESLint
+- `npm run build` - production build
+- `npm run start` - run production server
+
+## Deploy Notes
+
+This project currently stores digital slips in an in-memory map.
+
+Implications:
+- works well on one always-on Node process (booth machine)
+- not durable across restarts
+- not suitable for serverless multi-instance persistence without moving to DB/KV + object storage
+
+If deploying publicly (e.g. Vercel), keep `BOOTH_PASSWORD` configured and plan persistence changes for long-lived digital links.
+
+## Troubleshooting
+
+### QR opens but page is blank
+- verify protocol matches running server:
+  - `npm run dev` -> use `http://...`
+  - `npm run dev:lan` -> use `https://...`
+- open exact token URL: `/digital/<token>`
+- hard refresh on phone after updates
+
+### Download does not save on iPhone
+- use `Download JPEG` first
+- fallback: `Open full image` -> long press image -> `Save to Photos`
+
+### "Not found" for a valid-looking token
+- token may have been created on a different server/process
+- app may have restarted (in-memory slips cleared)
+- ensure QR host points to the same machine currently running Next.js
