@@ -39,9 +39,79 @@ import type {
 } from "@/types/booth";
 import { DEFAULT_BOOTH_SETTINGS } from "@/types/booth";
 import type { CustomerLayoutId } from "@/lib/customer-layout";
+import { getCustomerLayoutPreset } from "@/lib/customer-layout";
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+async function loadHtmlImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Could not load image"));
+    img.src = src;
+  });
+}
+
+async function renderColourLayoutDataUrl(
+  photos: readonly string[],
+  layoutId: CustomerLayoutId,
+): Promise<string | null> {
+  if (!photos.length) return null;
+  const preset = getCustomerLayoutPreset(layoutId);
+  const aspect =
+    preset.photoAspect === "1/1" ? 1 : preset.photoAspect === "4/5" ? 4 / 5 : 3 / 4;
+  const width = 1080;
+  const cardPadding = 52;
+  const gap = 32;
+  const titleHeight = 120;
+  const footerHeight = 96;
+  const frameWidth = width - cardPadding * 2;
+  const frameHeight = Math.round(frameWidth / aspect);
+  const count = Math.min(photos.length, 2);
+  const height =
+    titleHeight + cardPadding + frameHeight * count + gap * (count - 1) + footerHeight;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  ctx.fillStyle = "#efeae4";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "#fdfcfa";
+  ctx.fillRect(24, 24, width - 48, height - 48);
+
+  ctx.fillStyle = "#3a3026";
+  ctx.textAlign = "center";
+  ctx.font = "600 34px system-ui, -apple-system, sans-serif";
+  ctx.fillText("STLL HAUS", width / 2, 78);
+
+  let y = titleHeight;
+  for (let i = 0; i < count; i += 1) {
+    const img = await loadHtmlImage(photos[i]!);
+    ctx.fillStyle = "#efeae4";
+    ctx.fillRect(cardPadding, y, frameWidth, frameHeight);
+    const s = Math.max(frameWidth / img.width, frameHeight / img.height);
+    const dw = img.width * s;
+    const dh = img.height * s;
+    const dx = cardPadding + (frameWidth - dw) / 2;
+    const dy = y + (frameHeight - dh) / 2;
+    ctx.drawImage(img, dx, dy, dw, dh);
+    y += frameHeight + gap;
+  }
+
+  ctx.fillStyle = "#5f5143";
+  ctx.font = "500 24px system-ui, -apple-system, sans-serif";
+  ctx.fillText("quiet sips, slow moments", width / 2, height - 42);
+
+  try {
+    return canvas.toDataURL("image/jpeg", 0.92);
+  } catch {
+    return null;
+  }
 }
 
 export function BoothApp() {
@@ -257,6 +327,10 @@ export function BoothApp() {
   const handlePrint = useCallback(async () => {
     if (!receiptProps) return;
     const colourSnap = capturedPhotos[0] ?? null;
+    const layoutSnap = await renderColourLayoutDataUrl(
+      capturedPhotos,
+      customerLayoutId,
+    );
     setIsPrinting(true);
     setPrintPhase("sending");
     setPrinterConn("ready");
@@ -277,7 +351,10 @@ export function BoothApp() {
         const res = await fetch("/api/digital-slip", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageDataUrl: colourSnap }),
+          body: JSON.stringify({
+            imageDataUrl: colourSnap,
+            layoutDataUrl: layoutSnap,
+          }),
         });
         const data = (await res.json()) as { token?: string; error?: string };
         if (!res.ok) throw new Error(data.error || "Could not create link");
@@ -288,7 +365,7 @@ export function BoothApp() {
         setDigitalSlipStatus("fail");
       }
     })();
-  }, [receiptProps, copies, capturedPhotos]);
+  }, [receiptProps, copies, capturedPhotos, customerLayoutId]);
 
   const handleLayoutContinue = useCallback(() => {
     cameraStartedInGesture.current = true;

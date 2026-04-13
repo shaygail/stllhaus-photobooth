@@ -14,5 +14,6 @@ export async function GET(
   }
   return NextResponse.json({
     createdAt: new Date(slip.createdAt).toISOString(),
+    hasLayout: Boolean(slip.layoutDataUrl),
   });
 }

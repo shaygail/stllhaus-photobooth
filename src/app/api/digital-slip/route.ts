@@ -23,8 +23,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const body = (await request.json()) as { imageDataUrl?: string };
-    const token = createDigitalSlip(body.imageDataUrl ?? "");
+    const body = (await request.json()) as {
+      imageDataUrl?: string;
+      layoutDataUrl?: string;
+    };
+    const token = createDigitalSlip(body.imageDataUrl ?? "", body.layoutDataUrl);
     return NextResponse.json({ token });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Bad request";

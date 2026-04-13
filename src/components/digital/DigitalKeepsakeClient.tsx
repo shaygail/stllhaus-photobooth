@@ -27,7 +27,7 @@ type DigitalKeepsakeClientProps = {
 type MetaState =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "ok"; createdAt: string };
+  | { status: "ok"; createdAt: string; hasLayout: boolean };
 
 export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
   const [meta, setMeta] = useState<MetaState>({ status: "loading" });
@@ -42,6 +42,10 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [downloadBusy, setDownloadBusy] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [layoutDownloadBusy, setLayoutDownloadBusy] = useState(false);
+  const [layoutDownloadError, setLayoutDownloadError] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -57,6 +61,8 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
   const t = encodeURIComponent(rawToken);
   const relImage = `/api/digital-slip/${t}/image`;
   const relDownload = `/api/digital-slip/${t}/download`;
+  const relLayout = `/api/digital-slip/${t}/layout`;
+  const relLayoutDownload = `/api/digital-slip/${t}/layout-download`;
   const relMeta = `/api/digital-slip/${t}`;
 
   /** After mount, use absolute URLs — some mobile WebKit builds fail on relative `/api` in <img> */
@@ -85,6 +91,7 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
         const res = await fetch(relMeta, { cache: "no-store" });
         const data = (await res.json()) as {
           createdAt?: string;
+          hasLayout?: boolean;
           error?: string;
         };
         if (!res.ok) {
@@ -93,7 +100,13 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
         if (!data.createdAt) {
           throw new Error("Something went wrong loading your keepsake.");
         }
-        if (!cancelled) setMeta({ status: "ok", createdAt: data.createdAt });
+        if (!cancelled) {
+          setMeta({
+            status: "ok",
+            createdAt: data.createdAt,
+            hasLayout: Boolean(data.hasLayout),
+          });
+        }
       } catch (e) {
         if (!cancelled) {
           setMeta({
@@ -231,6 +244,44 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
     }
   }, [meta, relDownload, abs]);
 
+  const handleDownloadLayout = useCallback(async () => {
+    if (meta.status !== "ok" || !meta.hasLayout) return;
+    const saveAs = `stllhaus-layout-${slugForFilename(meta.createdAt)}.jpg`;
+    setLayoutDownloadError(null);
+    setLayoutDownloadBusy(true);
+    try {
+      const res = await fetch(abs(relLayoutDownload), { cache: "no-store" });
+      const ct = res.headers.get("content-type") ?? "";
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setLayoutDownloadError(data.error ?? `Layout download failed (${res.status}).`);
+        return;
+      }
+      if (!ct.startsWith("image/")) {
+        setLayoutDownloadError("Layout image was unavailable.");
+        return;
+      }
+      const blob = await res.blob();
+      if (blob.size === 0) {
+        setLayoutDownloadError("Empty layout file from server.");
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = saveAs;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      setLayoutDownloadError("Network error while downloading layout image.");
+    } finally {
+      setLayoutDownloadBusy(false);
+    }
+  }, [meta, relLayoutDownload, abs]);
+
   if (meta.status === "loading") {
     return (
       <div
@@ -357,6 +408,34 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
             <p className="rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-center text-[11px] leading-relaxed text-red-950">
               {downloadError}
             </p>
+          ) : null}
+
+          {meta.status === "ok" && meta.hasLayout ? (
+            <>
+              <button
+                type="button"
+                disabled={layoutDownloadBusy}
+                onClick={() => void handleDownloadLayout()}
+                className={`${secondaryLink} disabled:cursor-wait disabled:opacity-70`}
+              >
+                {layoutDownloadBusy
+                  ? "Preparing layout…"
+                  : "Download colour layout"}
+              </button>
+              {layoutDownloadError ? (
+                <p className="rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-center text-[11px] leading-relaxed text-red-950">
+                  {layoutDownloadError}
+                </p>
+              ) : null}
+              <a
+                href={relLayout}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-center text-[11px] font-medium text-stone-600 underline decoration-stone-400 underline-offset-2"
+              >
+                Open colour layout
+              </a>
+            </>
           ) : null}
 
           <a
