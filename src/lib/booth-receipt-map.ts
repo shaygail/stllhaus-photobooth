@@ -9,6 +9,7 @@ import type { BoothSettings } from "@/types/booth";
 export function boothSettingsToReceiptProps(
   settings: BoothSettings,
   photoDataUrl: string,
+  additionalPhotoUrls: readonly string[],
   when: Date,
   customerLayoutId?: CustomerLayoutId,
 ): ReceiptPrintLayoutProps {
@@ -32,6 +33,7 @@ export function boothSettingsToReceiptProps(
     brandName: settings.brandName,
     tagline: settings.tagline,
     photoUrl: photoDataUrl,
+    additionalPhotoUrls,
     dateText: formatBoothDate(when),
     timeText: formatBoothTime(when),
     locationText: settings.locationText,

@@ -4,15 +4,20 @@ import { BoothTapButton } from "@/components/booth/BoothTapButton";
 
 type PreviewScreenProps = {
   imageSrc: string;
+  shotIndex: number;
+  totalShots: number;
   onRetake: () => void;
   onContinue: () => void;
 };
 
 export function PreviewScreen({
   imageSrc,
+  shotIndex,
+  totalShots,
   onRetake,
   onContinue,
 }: PreviewScreenProps) {
+  const isFinal = shotIndex >= totalShots;
   return (
     <BoothShell className="flex flex-col gap-6">
       <header className="text-center">
@@ -22,6 +27,9 @@ export function PreviewScreen({
         <h2 className="mt-2 text-2xl font-light text-[var(--booth-ink)]">
           Looking lovely
         </h2>
+        <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--booth-walnut)]/60">
+          Shot {shotIndex} of {totalShots}
+        </p>
       </header>
 
       <div className="overflow-hidden rounded-[1.75rem] bg-[var(--booth-cream)] shadow-inner ring-1 ring-black/5">
@@ -35,15 +43,18 @@ export function PreviewScreen({
       </div>
 
       <p className="text-center text-sm leading-relaxed text-[var(--booth-walnut)]/85">
-        Next, choose how your moment sits on the strip — then we&apos;ll show
-        the soft, receipt-style preview.
+        {isFinal
+          ? "Next we’ll show your receipt preview before printing."
+          : "Great first shot. Continue to capture your second frame for the same receipt."}
       </p>
 
       <div className="mt-auto grid grid-cols-2 gap-3">
         <BoothTapButton variant="secondary" onClick={onRetake}>
           Retake
         </BoothTapButton>
-        <BoothTapButton onClick={onContinue}>Continue</BoothTapButton>
+        <BoothTapButton onClick={onContinue}>
+          {isFinal ? "Receipt preview" : "Take next photo"}
+        </BoothTapButton>
       </div>
     </BoothShell>
   );

@@ -35,6 +35,7 @@ import type {
   BoothStep,
   CountdownChoice,
   PrinterConnectionUi,
+  ReceiptPhotoCount,
 } from "@/types/booth";
 import { DEFAULT_BOOTH_SETTINGS } from "@/types/booth";
 import type { CustomerLayoutId } from "@/lib/customer-layout";
@@ -59,13 +60,14 @@ export function BoothApp() {
   const [countDisplay, setCountDisplay] = useState<number | null>(null);
   const countTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [captured, setCaptured] = useState<string | null>(null);
+  const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
   const [capturedAt, setCapturedAt] = useState<Date | null>(null);
   const [gallery, setGallery] = useState<BoothGalleryItem[]>([]);
   const [customerLayoutId, setCustomerLayoutId] =
     useState<CustomerLayoutId>("classic");
 
   const [copies, setCopies] = useState<1 | 2>(1);
+  const [receiptPhotoCount, setReceiptPhotoCount] = useState<ReceiptPhotoCount>(1);
   const [printerConn, setPrinterConn] =
     useState<PrinterConnectionUi>("checking");
   const [isPrinting, setIsPrinting] = useState(false);
@@ -171,22 +173,25 @@ export function BoothApp() {
 
   useEffect(() => {
     if (
-      (step === "layout" || step === "receipt" || step === "print") &&
-      (!captured || !capturedAt)
+      (step === "preview" || step === "receipt" || step === "print") &&
+      (capturedPhotos.length === 0 || !capturedAt)
     ) {
       setStep("welcome");
     }
-  }, [step, captured, capturedAt]);
+  }, [step, capturedPhotos, capturedAt]);
 
   const receiptProps = useMemo(() => {
-    if (!captured || !capturedAt) return null;
+    if (!capturedPhotos.length || !capturedAt) return null;
+    const [lead, ...rest] = capturedPhotos;
+    if (!lead) return null;
     return boothSettingsToReceiptProps(
       settings,
-      captured,
+      lead,
+      rest,
       capturedAt,
       customerLayoutId,
     );
-  }, [settings, captured, capturedAt, customerLayoutId]);
+  }, [settings, capturedPhotos, capturedAt, customerLayoutId]);
 
   const handleCapture = useCallback(() => {
     if (isCounting || !stream) return;
@@ -204,8 +209,11 @@ export function BoothApp() {
         void (async () => {
           const url = await captureDataUrl();
           if (url) {
-            setCaptured(url);
-            setCapturedAt(new Date());
+            if (!capturedAt) setCapturedAt(new Date());
+            setCapturedPhotos((prev) => {
+              const next = [...prev, url];
+              return next.slice(0, receiptPhotoCount);
+            });
             setStep("preview");
           }
         })();
@@ -213,10 +221,10 @@ export function BoothApp() {
         setCountDisplay(remaining);
       }
     }, 1000);
-  }, [isCounting, stream, countdownChoice, captureDataUrl]);
+  }, [isCounting, stream, countdownChoice, captureDataUrl, capturedAt, receiptPhotoCount]);
 
   const resetSession = useCallback(() => {
-    setCaptured(null);
+    setCapturedPhotos([]);
     setCapturedAt(null);
     setCopies(1);
     setPrintPhase("idle");
@@ -228,16 +236,13 @@ export function BoothApp() {
     setDigitalSlipStatus("idle");
     setDigitalToken(null);
     setCustomerLayoutId("classic");
+    setReceiptPhotoCount(1);
   }, []);
 
   const handleWelcomeStart = useCallback(() => {
     resetSession();
-    cameraStartedInGesture.current = true;
-    flushSync(() => {
-      setStep("camera");
-    });
-    void start();
-  }, [resetSession, start]);
+    setStep("layout");
+  }, [resetSession]);
 
   const handleStartOver = useCallback(() => {
     resetSession();
@@ -251,7 +256,7 @@ export function BoothApp() {
 
   const handlePrint = useCallback(async () => {
     if (!receiptProps) return;
-    const colourSnap = captured;
+    const colourSnap = capturedPhotos[0] ?? null;
     setIsPrinting(true);
     setPrintPhase("sending");
     setPrinterConn("ready");
@@ -283,7 +288,15 @@ export function BoothApp() {
         setDigitalSlipStatus("fail");
       }
     })();
-  }, [receiptProps, copies, captured]);
+  }, [receiptProps, copies, capturedPhotos]);
+
+  const handleLayoutContinue = useCallback(() => {
+    cameraStartedInGesture.current = true;
+    flushSync(() => {
+      setStep("camera");
+    });
+    void start();
+  }, [start]);
 
   const digitalViewUrl = useMemo(() => {
     if (!digitalToken || !origin) return null;
@@ -356,7 +369,7 @@ export function BoothApp() {
           onSwitchCamera={() => void switchCamera()}
           onBack={() => {
             stop();
-            setStep("welcome");
+            setStep("layout");
           }}
           error={error}
           isStarting={isStarting}
@@ -367,27 +380,34 @@ export function BoothApp() {
         />
       ) : null}
 
-      {step === "preview" && captured ? (
+      {step === "preview" && capturedPhotos.length > 0 ? (
         <PreviewScreen
-          imageSrc={captured}
+          imageSrc={capturedPhotos[capturedPhotos.length - 1]}
+          shotIndex={capturedPhotos.length}
+          totalShots={receiptPhotoCount}
           onRetake={() => {
-            setCaptured(null);
-            setCapturedAt(null);
+            setCapturedPhotos((prev) => prev.slice(0, -1));
+            if (capturedPhotos.length <= 1) {
+              setCapturedAt(null);
+            }
             setStep("camera");
           }}
           onContinue={() => {
-            if (captured) {
+            const latest = capturedPhotos[capturedPhotos.length - 1];
+            if (latest && capturedPhotos.length >= receiptPhotoCount) {
               const item: BoothGalleryItem = {
                 id:
                   typeof crypto !== "undefined" && crypto.randomUUID
                     ? crypto.randomUUID()
                     : String(Date.now()),
-                dataUrl: captured,
+                dataUrl: latest,
                 createdAt: new Date().toISOString(),
               };
               setGallery((g) => [item, ...g].slice(0, 48));
+              setStep("receipt");
+              return;
             }
-            setStep("layout");
+            setStep("camera");
           }}
         />
       ) : null}
@@ -396,15 +416,17 @@ export function BoothApp() {
         <LayoutSelectScreen
           selectedId={customerLayoutId}
           onSelect={setCustomerLayoutId}
-          onBack={() => setStep("preview")}
-          onContinue={() => setStep("receipt")}
+          photoCount={receiptPhotoCount}
+          onPhotoCountChange={setReceiptPhotoCount}
+          onBack={() => setStep("welcome")}
+          onContinue={handleLayoutContinue}
         />
       ) : null}
 
       {step === "receipt" && receiptProps ? (
         <ReceiptReviewScreen
           receiptProps={receiptProps}
-          onBack={() => setStep("layout")}
+          onBack={() => setStep("preview")}
           onContinue={() => setStep("print")}
         />
       ) : null}

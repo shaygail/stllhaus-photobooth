@@ -10,6 +10,7 @@ export type BoothStep =
   | "done";
 
 export type CountdownChoice = 3 | 5 | 10;
+export type ReceiptPhotoCount = 1 | 2;
 
 export type PrinterProfile = "bluetooth_portable" | "xprinter_80";
 
