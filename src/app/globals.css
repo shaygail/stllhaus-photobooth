@@ -3,12 +3,20 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* STLL HAUS booth — warm neutrals */
+  --booth-stone: #f6f4f0;
+  --booth-oat: #ebe6df;
+  --booth-sand: #dfd7cc;
+  --booth-walnut: #5c4f41;
+  --booth-ink: #2c2620;
+  --booth-cream: #fdfcfa;
+  --booth-blush: #f0e8e2;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-receipt);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -19,8 +27,47 @@
   }
 }
 
+.booth-root {
+  --background: var(--booth-stone);
+  --foreground: var(--booth-ink);
+  color: var(--booth-ink);
+  background: var(--booth-stone);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-receipt), system-ui, sans-serif;
+}
+
+/* Digital keepsake route: never use near-black dark body behind the page */
+body:has([data-digital-keepsake-root]) {
+  background: #ece8e3;
+  color: #2c2620;
+}
+
+/* Thermal strip: screen + paper */
+.receipt-thermal {
+  font-family: var(--font-receipt), system-ui, sans-serif;
+  color: #000000;
+  background: #ffffff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+@media print {
+  @page {
+    size: auto;
+    margin: 4mm;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  .receipt-print-root {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 auto;
+  }
 }
