@@ -4,7 +4,7 @@ import type {
   ReceiptPhotoLayout,
 } from "@/components/receipt";
 
-export type CustomerLayoutId = "classic" | "soft-square" | "quiet" | "story-collage";
+export type CustomerLayoutId = "classic" | "soft-square" | "quiet" | "mini-grid";
 
 export type CustomerLayoutPreset = {
   id: CustomerLayoutId;
@@ -45,11 +45,11 @@ export const CUSTOMER_LAYOUT_PRESETS: readonly CustomerLayoutPreset[] = [
     },
   },
   {
-    id: "story-collage",
-    title: "Story collage",
-    subtitle: "Polaroid mood — best with 4 photos on 80mm",
+    id: "mini-grid",
+    title: "Mini Grid",
+    subtitle: "4-photo collage",
     photoAspect: "1/1",
-    photoLayout: "grid-collage",
+    photoLayout: "mini-grid",
     displayPatch: {},
   },
 ] as const;

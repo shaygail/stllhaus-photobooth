@@ -42,10 +42,6 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [downloadBusy, setDownloadBusy] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
-  const [layoutDownloadBusy, setLayoutDownloadBusy] = useState(false);
-  const [layoutDownloadError, setLayoutDownloadError] = useState<string | null>(
-    null,
-  );
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -71,10 +67,23 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
     [origin],
   );
 
+  const primaryRelImage =
+    meta.status === "ok" && meta.hasLayout ? relLayout : relImage;
+  const primaryRelDownload =
+    meta.status === "ok" && meta.hasLayout ? relLayoutDownload : relDownload;
+  const primaryLabel =
+    meta.status === "ok" && meta.hasLayout
+      ? "Download colour layout"
+      : "Download JPEG";
+  const primaryOpenLabel =
+    meta.status === "ok" && meta.hasLayout
+      ? "Open colour layout"
+      : "Open full image";
+
   const imgSrc =
     meta.status === "ok"
-      ? `${abs(relImage)}?v=${encodeURIComponent(meta.createdAt)}`
-      : abs(relImage);
+      ? `${abs(primaryRelImage)}?v=${encodeURIComponent(meta.createdAt)}`
+      : abs(primaryRelImage);
 
   useEffect(() => {
     if (!rawToken) {
@@ -204,7 +213,7 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
     setDownloadError(null);
     setDownloadBusy(true);
     try {
-      const res = await fetch(abs(relDownload), { cache: "no-store" });
+      const res = await fetch(abs(primaryRelDownload), { cache: "no-store" });
       const ct = res.headers.get("content-type") ?? "";
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -242,45 +251,7 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
     } finally {
       setDownloadBusy(false);
     }
-  }, [meta, relDownload, abs]);
-
-  const handleDownloadLayout = useCallback(async () => {
-    if (meta.status !== "ok" || !meta.hasLayout) return;
-    const saveAs = `stllhaus-layout-${slugForFilename(meta.createdAt)}.jpg`;
-    setLayoutDownloadError(null);
-    setLayoutDownloadBusy(true);
-    try {
-      const res = await fetch(abs(relLayoutDownload), { cache: "no-store" });
-      const ct = res.headers.get("content-type") ?? "";
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        setLayoutDownloadError(data.error ?? `Layout download failed (${res.status}).`);
-        return;
-      }
-      if (!ct.startsWith("image/")) {
-        setLayoutDownloadError("Layout image was unavailable.");
-        return;
-      }
-      const blob = await res.blob();
-      if (blob.size === 0) {
-        setLayoutDownloadError("Empty layout file from server.");
-        return;
-      }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = saveAs;
-      a.rel = "noopener";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch {
-      setLayoutDownloadError("Network error while downloading layout image.");
-    } finally {
-      setLayoutDownloadBusy(false);
-    }
-  }, [meta, relLayoutDownload, abs]);
+  }, [meta, primaryRelDownload, abs]);
 
   if (meta.status === "loading") {
     return (
@@ -380,8 +351,8 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
                 <p className="font-medium text-stone-800">Photo didn&apos;t load</p>
                 <p>{imgErrDetail ?? "Bad response or blocked request."}</p>
                 <p className="text-stone-500">
-                  Try <span className="font-semibold text-stone-700">Download JPEG</span>{" "}
-                  or <span className="font-semibold text-stone-700">Open full image</span>.
+                  Try <span className="font-semibold text-stone-700">{primaryLabel}</span>{" "}
+                  or <span className="font-semibold text-stone-700">{primaryOpenLabel}</span>.
                 </p>
               </div>
             ) : null}
@@ -402,7 +373,7 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
             onClick={() => void handleDownloadJpeg()}
             className={`${primaryLink} disabled:cursor-wait disabled:opacity-70`}
           >
-            {downloadBusy ? "Preparing download…" : "Download JPEG"}
+            {downloadBusy ? "Preparing download…" : primaryLabel}
           </button>
           {downloadError ? (
             <p className="rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-center text-[11px] leading-relaxed text-red-950">
@@ -410,54 +381,36 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
             </p>
           ) : null}
 
-          {meta.status === "ok" && meta.hasLayout ? (
-            <>
-              <button
-                type="button"
-                disabled={layoutDownloadBusy}
-                onClick={() => void handleDownloadLayout()}
-                className={`${secondaryLink} disabled:cursor-wait disabled:opacity-70`}
-              >
-                {layoutDownloadBusy
-                  ? "Preparing layout…"
-                  : "Download colour layout"}
-              </button>
-              {layoutDownloadError ? (
-                <p className="rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-center text-[11px] leading-relaxed text-red-950">
-                  {layoutDownloadError}
-                </p>
-              ) : null}
-              <a
-                href={relLayout}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-center text-[11px] font-medium text-stone-600 underline decoration-stone-400 underline-offset-2"
-              >
-                Open colour layout
-              </a>
-            </>
-          ) : null}
-
           <a
-            href={relImage}
+            href={primaryRelImage}
             target="_blank"
             rel="noopener noreferrer"
             className={secondaryLink}
           >
-            Open full image
+            {primaryOpenLabel}
           </a>
           <a
-            href={relDownload}
+            href={primaryRelDownload}
             target="_blank"
             rel="noopener noreferrer"
             className="text-center text-[11px] font-medium text-stone-600 underline decoration-stone-400 underline-offset-2"
           >
             Direct download link (opens new tab)
           </a>
+          {meta.status === "ok" && meta.hasLayout ? (
+            <a
+              href={relImage}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-center text-[11px] font-medium text-stone-500 underline decoration-stone-300 underline-offset-2"
+            >
+              Open original photo instead
+            </a>
+          ) : null}
           <p className="text-center text-[11px] leading-relaxed text-stone-500">
             On iPhone, Safari often ignores a normal save button — we fetch the file for
             you first. If nothing saves, tap{" "}
-            <span className="font-semibold text-stone-700">Open full image</span>, then{" "}
+            <span className="font-semibold text-stone-700">{primaryOpenLabel}</span>, then{" "}
             <span className="font-semibold text-stone-700">long-press</span> the picture and{" "}
             <span className="font-semibold text-stone-700">Save to Photos</span>.
           </p>

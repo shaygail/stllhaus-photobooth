@@ -42,7 +42,7 @@ export function ReceiptPhotoBlock({
   const isNarrow = paperWidth === "58mm";
   const framePadding = isNarrow ? "px-1" : "px-1.5";
   const urls = [photoUrl, ...(additionalPhotoUrls ?? [])];
-  const useGrid = !isNarrow && photoLayout === "grid-collage" && urls.length >= 4;
+  const useGrid = !isNarrow && photoLayout === "mini-grid" && urls.length >= 4;
 
   return (
     <div className={`w-full ${framePadding}`}>

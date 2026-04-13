@@ -13,6 +13,7 @@ type LayoutSelectScreenProps = {
   onPhotoCountChange: (count: ReceiptPhotoCount) => void;
   availablePhotoCounts: readonly ReceiptPhotoCount[];
   paperWidthLabel: "58mm" | "80mm";
+  miniGridEnabled: boolean;
   onBack: () => void;
   onContinue: () => void;
 };
@@ -24,7 +25,7 @@ function LayoutMiniFrame({
   id: CustomerLayoutId;
   active: boolean;
 }) {
-  if (id === "story-collage") {
+  if (id === "mini-grid") {
     return (
       <div
         className={`mx-auto rounded-xl bg-[var(--booth-oat)]/90 p-2 ring-1 ring-inset ring-black/[0.06] ${
@@ -68,6 +69,25 @@ function StripCountPreview({
   layoutId: CustomerLayoutId;
   photoCount: ReceiptPhotoCount;
 }) {
+  if (layoutId === "mini-grid") {
+    return (
+      <div className="mx-auto w-full max-w-[13rem] rounded-2xl bg-[var(--booth-cream)]/95 p-3 ring-1 ring-black/10 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="aspect-square w-full rounded-lg bg-[var(--booth-walnut)]/20"
+              aria-hidden
+            />
+          ))}
+        </div>
+        <div className="mt-3 border-t border-black/10 pt-2 text-center text-[10px] uppercase tracking-[0.15em] text-[var(--booth-walnut)]/70">
+          mini grid preview
+        </div>
+      </div>
+    );
+  }
+
   const frameClass =
     layoutId === "classic"
       ? "aspect-[3/4]"
@@ -75,7 +95,7 @@ function StripCountPreview({
         ? "aspect-square"
         : "aspect-[4/5]";
 
-  const frames = photoCount === 2 ? [0, 1] : [0];
+  const frames = photoCount === 3 ? [0, 1, 2] : photoCount === 2 ? [0, 1] : [0];
 
   return (
     <div className="mx-auto w-full max-w-[13rem] rounded-2xl bg-[var(--booth-cream)]/95 p-3 ring-1 ring-black/10 shadow-sm">
@@ -102,6 +122,7 @@ export function LayoutSelectScreen({
   onPhotoCountChange,
   availablePhotoCounts,
   paperWidthLabel,
+  miniGridEnabled,
   onBack,
   onContinue,
 }: LayoutSelectScreenProps) {
@@ -123,15 +144,21 @@ export function LayoutSelectScreen({
       <div className="grid gap-3">
         {CUSTOMER_LAYOUT_PRESETS.map((preset) => {
           const active = preset.id === selectedId;
+          const disabled = preset.id === "mini-grid" && !miniGridEnabled;
           return (
             <button
               key={preset.id}
               type="button"
-              onClick={() => onSelect(preset.id)}
+              onClick={() => {
+                if (!disabled) onSelect(preset.id);
+              }}
+              disabled={disabled}
               className={`rounded-3xl border px-4 py-4 text-left transition ${
                 active
                   ? "border-[var(--booth-ink)]/35 bg-[var(--booth-cream)] shadow-sm"
-                  : "border-black/[0.06] bg-white/60 hover:bg-white/90"
+                  : disabled
+                    ? "cursor-not-allowed border-black/[0.05] bg-black/[0.03] opacity-60"
+                    : "border-black/[0.06] bg-white/60 hover:bg-white/90"
               }`}
             >
               <div className="flex items-center gap-4">
@@ -148,6 +175,11 @@ export function LayoutSelectScreen({
                   <p className="text-sm leading-relaxed text-[var(--booth-walnut)]/85">
                     {preset.subtitle}
                   </p>
+                  {disabled ? (
+                    <p className="text-[11px] text-[var(--booth-walnut)]/70">
+                      Available on 80mm only
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </button>
@@ -192,7 +224,7 @@ export function LayoutSelectScreen({
           })}
         </div>
         <p className="text-center text-[11px] text-[var(--booth-walnut)]/75">
-          58mm supports 1-2 photos. 80mm supports 1-4 photos.
+          Stacked layouts support 2 or 3 photos. Mini Grid is fixed to 4 photos on 80mm.
         </p>
       </section>
 

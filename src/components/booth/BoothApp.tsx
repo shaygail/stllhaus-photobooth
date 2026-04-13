@@ -39,7 +39,10 @@ import type {
   ReceiptPhotoCount,
 } from "@/types/booth";
 import { DEFAULT_BOOTH_SETTINGS } from "@/types/booth";
-import type { CustomerLayoutId } from "@/lib/customer-layout";
+import {
+  getCustomerLayoutPreset,
+  type CustomerLayoutId,
+} from "@/lib/customer-layout";
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -68,7 +71,7 @@ async function renderColourLayoutDataUrl(
       : receipt.photoAspect === "4/5"
         ? 4 / 5
         : 3 / 4;
-  const isGrid = receipt.photoLayout === "grid-collage" && photos.length >= 4;
+  const isGrid = receipt.photoLayout === "mini-grid" && photos.length >= 4;
   const width = 1080;
   const cardPadding = 56;
   const gap = 28;
@@ -227,17 +230,33 @@ export function BoothApp() {
     useState<CustomerLayoutId>("classic");
 
   const [copies, setCopies] = useState<1 | 2>(1);
-  const [receiptPhotoCount, setReceiptPhotoCount] = useState<ReceiptPhotoCount>(1);
+  const [receiptPhotoCount, setReceiptPhotoCount] = useState<ReceiptPhotoCount>(2);
+  const selectedPreset = useMemo(
+    () => getCustomerLayoutPreset(customerLayoutId),
+    [customerLayoutId],
+  );
+  const miniGridEnabled = settings.paperWidth === "80mm";
   const availablePhotoCounts = useMemo<readonly ReceiptPhotoCount[]>(
-    () => (settings.paperWidth === "58mm" ? ([1, 2] as const) : ([1, 2, 3, 4] as const)),
-    [settings.paperWidth],
+    () =>
+      selectedPreset.id === "mini-grid"
+        ? miniGridEnabled
+          ? ([4] as const)
+          : ([] as const)
+        : settings.paperWidth === "58mm"
+          ? ([2] as const)
+          : ([2, 3] as const),
+    [selectedPreset.id, miniGridEnabled, settings.paperWidth],
   );
 
   useEffect(() => {
-    if (!availablePhotoCounts.includes(receiptPhotoCount)) {
-      setReceiptPhotoCount(availablePhotoCounts[availablePhotoCounts.length - 1] ?? 1);
+    if (!miniGridEnabled && selectedPreset.id === "mini-grid") {
+      setCustomerLayoutId("classic");
+      return;
     }
-  }, [availablePhotoCounts, receiptPhotoCount]);
+    if (!availablePhotoCounts.includes(receiptPhotoCount)) {
+      setReceiptPhotoCount(availablePhotoCounts[availablePhotoCounts.length - 1] ?? 2);
+    }
+  }, [availablePhotoCounts, receiptPhotoCount, miniGridEnabled, selectedPreset.id]);
 
   const [printerConn, setPrinterConn] =
     useState<PrinterConnectionUi>("checking");
@@ -407,7 +426,7 @@ export function BoothApp() {
     setDigitalSlipStatus("idle");
     setDigitalToken(null);
     setCustomerLayoutId("classic");
-    setReceiptPhotoCount(1);
+    setReceiptPhotoCount(2);
   }, []);
 
   const handleWelcomeStart = useCallback(() => {
@@ -603,6 +622,7 @@ export function BoothApp() {
           onPhotoCountChange={handlePhotoCountChange}
           availablePhotoCounts={availablePhotoCounts}
           paperWidthLabel={settings.paperWidth}
+          miniGridEnabled={miniGridEnabled}
           onBack={() => setStep("welcome")}
           onContinue={handleLayoutContinue}
         />
