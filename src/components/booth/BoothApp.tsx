@@ -74,7 +74,7 @@ async function renderColourLayoutDataUrl(
   const titleHeight = 152;
   const frameWidth = width - cardPadding * 2;
   const frameHeight = Math.round(frameWidth / aspect);
-  const count = Math.min(photos.length, 2);
+  const count = Math.min(photos.length, 4);
   const showMeta = receipt.display?.showMetaBlock ?? true;
   const showMessage = receipt.display?.showMessageBlock ?? true;
   const showConnect = receipt.display?.showConnectBlock ?? true;
@@ -208,6 +208,17 @@ export function BoothApp() {
 
   const [copies, setCopies] = useState<1 | 2>(1);
   const [receiptPhotoCount, setReceiptPhotoCount] = useState<ReceiptPhotoCount>(1);
+  const availablePhotoCounts = useMemo<readonly ReceiptPhotoCount[]>(
+    () => (settings.paperWidth === "58mm" ? ([1, 2] as const) : ([1, 2, 3, 4] as const)),
+    [settings.paperWidth],
+  );
+
+  useEffect(() => {
+    if (!availablePhotoCounts.includes(receiptPhotoCount)) {
+      setReceiptPhotoCount(availablePhotoCounts[availablePhotoCounts.length - 1] ?? 1);
+    }
+  }, [availablePhotoCounts, receiptPhotoCount]);
+
   const [printerConn, setPrinterConn] =
     useState<PrinterConnectionUi>("checking");
   const [isPrinting, setIsPrinting] = useState(false);
@@ -442,6 +453,14 @@ export function BoothApp() {
     void start();
   }, [start]);
 
+  const handlePhotoCountChange = useCallback(
+    (count: ReceiptPhotoCount) => {
+      if (!availablePhotoCounts.includes(count)) return;
+      setReceiptPhotoCount(count);
+    },
+    [availablePhotoCounts],
+  );
+
   const digitalViewUrl = useMemo(() => {
     if (!digitalToken || !origin) return null;
     const base = resolveBoothPublicOrigin(settings.publicSiteUrl, origin);
@@ -561,7 +580,9 @@ export function BoothApp() {
           selectedId={customerLayoutId}
           onSelect={setCustomerLayoutId}
           photoCount={receiptPhotoCount}
-          onPhotoCountChange={setReceiptPhotoCount}
+          onPhotoCountChange={handlePhotoCountChange}
+          availablePhotoCounts={availablePhotoCounts}
+          paperWidthLabel={settings.paperWidth}
           onBack={() => setStep("welcome")}
           onContinue={handleLayoutContinue}
         />

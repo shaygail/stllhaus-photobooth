@@ -11,6 +11,8 @@ type LayoutSelectScreenProps = {
   onSelect: (id: CustomerLayoutId) => void;
   photoCount: ReceiptPhotoCount;
   onPhotoCountChange: (count: ReceiptPhotoCount) => void;
+  availablePhotoCounts: readonly ReceiptPhotoCount[];
+  paperWidthLabel: "58mm" | "80mm";
   onBack: () => void;
   onContinue: () => void;
 };
@@ -82,6 +84,8 @@ export function LayoutSelectScreen({
   onSelect,
   photoCount,
   onPhotoCountChange,
+  availablePhotoCounts,
+  paperWidthLabel,
   onBack,
   onContinue,
 }: LayoutSelectScreenProps) {
@@ -144,32 +148,36 @@ export function LayoutSelectScreen({
 
       <section className="space-y-2">
         <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--booth-walnut)]/60">
-          Photos on one receipt
+          Photos on one receipt ({paperWidthLabel})
         </p>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => onPhotoCountChange(1)}
-            className={`rounded-2xl border px-3 py-3 text-sm font-medium transition ${
-              photoCount === 1
-                ? "border-[var(--booth-ink)]/35 bg-[var(--booth-cream)]"
-                : "border-black/[0.08] bg-white/60 hover:bg-white/90"
-            }`}
-          >
-            1 photo
-          </button>
-          <button
-            type="button"
-            onClick={() => onPhotoCountChange(2)}
-            className={`rounded-2xl border px-3 py-3 text-sm font-medium transition ${
-              photoCount === 2
-                ? "border-[var(--booth-ink)]/35 bg-[var(--booth-cream)]"
-                : "border-black/[0.08] bg-white/60 hover:bg-white/90"
-            }`}
-          >
-            2 photos
-          </button>
+        <div className="grid grid-cols-4 gap-2">
+          {([1, 2, 3, 4] as const).map((count) => {
+            const available = availablePhotoCounts.includes(count);
+            const selected = photoCount === count;
+            return (
+              <button
+                key={count}
+                type="button"
+                onClick={() => {
+                  if (available) onPhotoCountChange(count);
+                }}
+                disabled={!available}
+                className={`rounded-2xl border px-2 py-3 text-sm font-medium transition ${
+                  selected
+                    ? "border-[var(--booth-ink)]/35 bg-[var(--booth-cream)]"
+                    : available
+                      ? "border-black/[0.08] bg-white/60 hover:bg-white/90"
+                      : "cursor-not-allowed border-black/[0.06] bg-black/[0.04] text-[var(--booth-walnut)]/45"
+                }`}
+              >
+                {count}
+              </button>
+            );
+          })}
         </div>
+        <p className="text-center text-[11px] text-[var(--booth-walnut)]/75">
+          58mm supports 1-2 photos. 80mm supports 1-4 photos.
+        </p>
       </section>
 
       <div className="mt-auto grid grid-cols-2 gap-3">

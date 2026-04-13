@@ -45,6 +45,7 @@ export function AdminPanel({
   onSignOut,
 }: AdminPanelProps) {
   if (!open) return null;
+  const isDesk80 = settings.printerProfile === "xprinter_80";
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/25 backdrop-blur-[2px]">
@@ -82,10 +83,18 @@ export function AdminPanel({
                 className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--booth-cream)] px-3 py-3 text-sm"
                 value={settings.printerProfile}
                 onChange={(e) =>
-                  onChange({
-                    ...settings,
-                    printerProfile: e.target.value as BoothSettings["printerProfile"],
-                  })
+                  onChange(
+                    e.target.value === "xprinter_80"
+                      ? {
+                          ...settings,
+                          printerProfile: "xprinter_80",
+                          paperWidth: "80mm",
+                        }
+                      : {
+                          ...settings,
+                          printerProfile: "bluetooth_portable",
+                        },
+                  )
                 }
               >
                 <option value="xprinter_80">Xprinter · 80mm desk</option>
@@ -99,6 +108,7 @@ export function AdminPanel({
               <select
                 className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--booth-cream)] px-3 py-3 text-sm"
                 value={settings.paperWidth}
+                disabled={isDesk80}
                 onChange={(e) =>
                   onChange({
                     ...settings,
@@ -111,8 +121,8 @@ export function AdminPanel({
               </select>
             </label>
             <p className="text-xs leading-relaxed text-[var(--booth-walnut)]/75">
-              Hardware routing comes next — this panel controls layout, copy,
-              and how the strip reads on paper.
+              Printer type controls paper support: desk Xprinter is fixed 80mm,
+              portable Bluetooth can use 58mm or 80mm.
             </p>
           </section>
 
