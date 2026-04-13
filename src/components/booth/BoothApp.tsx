@@ -28,6 +28,7 @@ import {
   boothSettingsToReceiptProps,
   printerLabelFromSettings,
 } from "@/lib/booth-receipt-map";
+import type { ReceiptPrintLayoutProps } from "@/components/receipt";
 import { resolveBoothPublicOrigin } from "@/lib/booth-public-url";
 import { loadBoothSettings, saveBoothSettings } from "@/lib/booth-settings-storage";
 import type {
@@ -39,7 +40,6 @@ import type {
 } from "@/types/booth";
 import { DEFAULT_BOOTH_SETTINGS } from "@/types/booth";
 import type { CustomerLayoutId } from "@/lib/customer-layout";
-import { getCustomerLayoutPreset } from "@/lib/customer-layout";
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -55,23 +55,40 @@ async function loadHtmlImage(src: string): Promise<HTMLImageElement> {
 }
 
 async function renderColourLayoutDataUrl(
-  photos: readonly string[],
-  layoutId: CustomerLayoutId,
+  receipt: ReceiptPrintLayoutProps,
+  origin: string,
 ): Promise<string | null> {
+  const photos = [receipt.photoUrl, ...(receipt.additionalPhotoUrls ?? [])].filter(
+    Boolean,
+  ) as string[];
   if (!photos.length) return null;
-  const preset = getCustomerLayoutPreset(layoutId);
   const aspect =
-    preset.photoAspect === "1/1" ? 1 : preset.photoAspect === "4/5" ? 4 / 5 : 3 / 4;
+    receipt.photoAspect === "1/1"
+      ? 1
+      : receipt.photoAspect === "4/5"
+        ? 4 / 5
+        : 3 / 4;
   const width = 1080;
-  const cardPadding = 52;
-  const gap = 32;
-  const titleHeight = 120;
-  const footerHeight = 96;
+  const cardPadding = 56;
+  const gap = 28;
+  const titleHeight = 152;
   const frameWidth = width - cardPadding * 2;
   const frameHeight = Math.round(frameWidth / aspect);
   const count = Math.min(photos.length, 2);
+  const showMeta = receipt.display?.showMetaBlock ?? true;
+  const showMessage = receipt.display?.showMessageBlock ?? true;
+  const showConnect = receipt.display?.showConnectBlock ?? true;
+  const metaHeight = showMeta ? 88 : 0;
+  const messageHeight = showMessage ? 76 : 0;
+  const connectHeight = showConnect ? 64 : 0;
+  const footerHeight = messageHeight + connectHeight + 68;
   const height =
-    titleHeight + cardPadding + frameHeight * count + gap * (count - 1) + footerHeight;
+    titleHeight +
+    cardPadding +
+    frameHeight * count +
+    gap * (count - 1) +
+    metaHeight +
+    footerHeight;
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -84,10 +101,26 @@ async function renderColourLayoutDataUrl(
   ctx.fillStyle = "#fdfcfa";
   ctx.fillRect(24, 24, width - 48, height - 48);
 
-  ctx.fillStyle = "#3a3026";
-  ctx.textAlign = "center";
-  ctx.font = "600 34px system-ui, -apple-system, sans-serif";
-  ctx.fillText("STLL HAUS", width / 2, 78);
+  const logoSize = 140;
+  const logoX = (width - logoSize) / 2;
+  const logoY = 38;
+  try {
+    const logo = await loadHtmlImage(
+      origin ? `${origin}/logo-matcha.png` : "/logo-matcha.png",
+    );
+    ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+  } catch {
+    ctx.fillStyle = "#3a3026";
+    ctx.textAlign = "center";
+    ctx.font = "600 34px system-ui, -apple-system, sans-serif";
+    ctx.fillText(receipt.brandName || "STLL HAUS", width / 2, 86);
+  }
+  if (receipt.display?.showTagline ?? true) {
+    ctx.fillStyle = "#5f5143";
+    ctx.textAlign = "center";
+    ctx.font = "500 20px system-ui, -apple-system, sans-serif";
+    ctx.fillText(receipt.tagline || "a quiet place, made for slowing down", width / 2, 138);
+  }
 
   let y = titleHeight;
   for (let i = 0; i < count; i += 1) {
@@ -103,9 +136,46 @@ async function renderColourLayoutDataUrl(
     y += frameHeight + gap;
   }
 
-  ctx.fillStyle = "#5f5143";
-  ctx.font = "500 24px system-ui, -apple-system, sans-serif";
-  ctx.fillText("quiet sips, slow moments", width / 2, height - 42);
+  if (showMeta) {
+    const line = `${receipt.dateText} • ${receipt.timeText} • ${receipt.locationText}`;
+    ctx.fillStyle = "#4b3f33";
+    ctx.textAlign = "center";
+    ctx.font = "500 20px system-ui, -apple-system, sans-serif";
+    ctx.fillText(line, width / 2, y + 34);
+    y += metaHeight;
+  }
+
+  if (showMessage) {
+    ctx.fillStyle = "#3a3026";
+    ctx.textAlign = "center";
+    ctx.font = "600 24px system-ui, -apple-system, sans-serif";
+    ctx.fillText(receipt.messageText || "quiet sips, slow moments", width / 2, y + 36);
+    y += messageHeight;
+  }
+
+  if (showConnect) {
+    const links = [receipt.websiteText, receipt.instagramText]
+      .filter(Boolean)
+      .join("  •  ");
+    if (links) {
+      ctx.fillStyle = "#6d5f52";
+      ctx.textAlign = "center";
+      ctx.font = "500 18px system-ui, -apple-system, sans-serif";
+      ctx.fillText(links, width / 2, y + 28);
+    }
+    y += connectHeight;
+  }
+
+  if (receipt.display?.showEndOrnament ?? true) {
+    ctx.fillStyle = "#7a6a5b";
+    for (let i = 0; i < 12; i += 1) {
+      const dotX = width / 2 - 44 + i * 8;
+      const dotY = y + 24 + ((i % 2) * 2 - 1);
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   try {
     return canvas.toDataURL("image/jpeg", 0.92);
@@ -327,10 +397,7 @@ export function BoothApp() {
   const handlePrint = useCallback(async () => {
     if (!receiptProps) return;
     const colourSnap = capturedPhotos[0] ?? null;
-    const layoutSnap = await renderColourLayoutDataUrl(
-      capturedPhotos,
-      customerLayoutId,
-    );
+    const layoutSnap = await renderColourLayoutDataUrl(receiptProps, origin);
     setIsPrinting(true);
     setPrintPhase("sending");
     setPrinterConn("ready");
@@ -365,7 +432,7 @@ export function BoothApp() {
         setDigitalSlipStatus("fail");
       }
     })();
-  }, [receiptProps, copies, capturedPhotos, customerLayoutId]);
+  }, [receiptProps, copies, capturedPhotos, origin]);
 
   const handleLayoutContinue = useCallback(() => {
     cameraStartedInGesture.current = true;
