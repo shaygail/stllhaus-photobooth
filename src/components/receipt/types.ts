@@ -2,6 +2,7 @@ export type PaperWidth = "58mm" | "80mm";
 
 /** Photo window on the thermal strip */
 export type ReceiptPhotoAspect = "3/4" | "1/1" | "4/5";
+export type ReceiptPhotoLayout = "stack" | "grid-collage";
 
 /** Optional visibility for kiosk / staff tuning (defaults: all on). */
 export type ReceiptDisplayToggles = {
@@ -37,6 +38,7 @@ export interface ReceiptPrintProps {
   paperWidth?: PaperWidth;
   /** Defaults to a tall portrait frame */
   photoAspect?: ReceiptPhotoAspect;
+  photoLayout?: ReceiptPhotoLayout;
   display?: ReceiptDisplayToggles;
   thermal?: ReceiptThermalAdjust;
 }

@@ -68,13 +68,18 @@ async function renderColourLayoutDataUrl(
       : receipt.photoAspect === "4/5"
         ? 4 / 5
         : 3 / 4;
+  const isGrid = receipt.photoLayout === "grid-collage" && photos.length >= 4;
   const width = 1080;
   const cardPadding = 56;
   const gap = 28;
   const titleHeight = 152;
-  const frameWidth = width - cardPadding * 2;
-  const frameHeight = Math.round(frameWidth / aspect);
+  const contentWidth = width - cardPadding * 2;
   const count = Math.min(photos.length, 4);
+  const frameWidth = isGrid ? Math.floor((contentWidth - gap) / 2) : contentWidth;
+  const frameHeight = isGrid ? frameWidth : Math.round(frameWidth / aspect);
+  const photosBlockHeight = isGrid
+    ? frameHeight * 2 + gap
+    : frameHeight * count + gap * (count - 1);
   const showMeta = receipt.display?.showMetaBlock ?? true;
   const showMessage = receipt.display?.showMessageBlock ?? true;
   const showConnect = receipt.display?.showConnectBlock ?? true;
@@ -85,8 +90,7 @@ async function renderColourLayoutDataUrl(
   const height =
     titleHeight +
     cardPadding +
-    frameHeight * count +
-    gap * (count - 1) +
+    photosBlockHeight +
     metaHeight +
     footerHeight;
 
@@ -122,18 +126,34 @@ async function renderColourLayoutDataUrl(
     ctx.fillText(receipt.tagline || "a quiet place, made for slowing down", width / 2, 138);
   }
 
-  let y = titleHeight;
-  for (let i = 0; i < count; i += 1) {
-    const img = await loadHtmlImage(photos[i]!);
+  const drawFrame = async (src: string, x: number, y: number, w: number, h: number) => {
+    const img = await loadHtmlImage(src);
     ctx.fillStyle = "#efeae4";
-    ctx.fillRect(cardPadding, y, frameWidth, frameHeight);
-    const s = Math.max(frameWidth / img.width, frameHeight / img.height);
+    ctx.fillRect(x, y, w, h);
+    const s = Math.max(w / img.width, h / img.height);
     const dw = img.width * s;
     const dh = img.height * s;
-    const dx = cardPadding + (frameWidth - dw) / 2;
-    const dy = y + (frameHeight - dh) / 2;
+    const dx = x + (w - dw) / 2;
+    const dy = y + (h - dh) / 2;
     ctx.drawImage(img, dx, dy, dw, dh);
-    y += frameHeight + gap;
+  };
+
+  let y = titleHeight;
+  if (isGrid) {
+    const gridPhotos = photos.slice(0, 4);
+    for (let i = 0; i < gridPhotos.length; i += 1) {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = cardPadding + col * (frameWidth + gap);
+      const yy = y + row * (frameHeight + gap);
+      await drawFrame(gridPhotos[i]!, x, yy, frameWidth, frameHeight);
+    }
+    y += photosBlockHeight + gap;
+  } else {
+    for (let i = 0; i < count; i += 1) {
+      await drawFrame(photos[i]!, cardPadding, y, frameWidth, frameHeight);
+      y += frameHeight + gap;
+    }
   }
 
   if (showMeta) {

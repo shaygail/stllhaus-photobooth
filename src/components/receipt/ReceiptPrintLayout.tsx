@@ -54,6 +54,7 @@ export function ReceiptPrintLayout({
   qrCodeUrl,
   paperWidth = "80mm",
   photoAspect,
+  photoLayout,
   display,
   thermal,
 }: ReceiptPrintLayoutProps) {
@@ -87,6 +88,7 @@ export function ReceiptPrintLayout({
             additionalPhotoUrls={additionalPhotoUrls}
             paperWidth={paperWidth}
             photoAspect={photoAspect}
+            photoLayout={photoLayout}
             thermal={thermal}
           />
         ) : null}

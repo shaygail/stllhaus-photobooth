@@ -24,6 +24,22 @@ function LayoutMiniFrame({
   id: CustomerLayoutId;
   active: boolean;
 }) {
+  if (id === "story-collage") {
+    return (
+      <div
+        className={`mx-auto rounded-xl bg-[var(--booth-oat)]/90 p-2 ring-1 ring-inset ring-black/[0.06] ${
+          active ? "ring-2 ring-[var(--booth-ink)]/35" : ""
+        }`}
+      >
+        <div className="grid h-16 w-16 grid-cols-2 gap-1">
+          <div className="rounded-sm bg-[var(--booth-walnut)]/25" />
+          <div className="rounded-sm bg-[var(--booth-walnut)]/30" />
+          <div className="rounded-sm bg-[var(--booth-walnut)]/30" />
+          <div className="rounded-sm bg-[var(--booth-walnut)]/25" />
+        </div>
+      </div>
+    );
+  }
   const inner =
     id === "classic"
       ? "h-16 w-12"

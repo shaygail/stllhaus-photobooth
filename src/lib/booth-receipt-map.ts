@@ -44,6 +44,7 @@ export function boothSettingsToReceiptProps(
     qrCodeUrl: qr,
     paperWidth: settings.paperWidth,
     photoAspect: preset.photoAspect,
+    photoLayout: preset.photoLayout,
     display,
     thermal: {
       brightness: settings.thermalBrightness,

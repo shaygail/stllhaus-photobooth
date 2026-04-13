@@ -2,6 +2,7 @@ import { BOOTH_PHOTO_DISPLAY_SCALE } from "@/constants/booth-photo";
 import type {
   PaperWidth,
   ReceiptPhotoAspect,
+  ReceiptPhotoLayout,
   ReceiptThermalAdjust,
 } from "./types";
 
@@ -10,6 +11,7 @@ type ReceiptPhotoBlockProps = {
   additionalPhotoUrls?: readonly string[];
   paperWidth: PaperWidth;
   photoAspect?: ReceiptPhotoAspect;
+  photoLayout?: ReceiptPhotoLayout;
   alt?: string;
   thermal?: ReceiptThermalAdjust;
 };
@@ -33,17 +35,19 @@ export function ReceiptPhotoBlock({
   additionalPhotoUrls,
   paperWidth,
   photoAspect = "3/4",
+  photoLayout = "stack",
   alt = "Photobooth moment",
   thermal = DEFAULT_THERMAL,
 }: ReceiptPhotoBlockProps) {
   const isNarrow = paperWidth === "58mm";
   const framePadding = isNarrow ? "px-1" : "px-1.5";
   const urls = [photoUrl, ...(additionalPhotoUrls ?? [])];
+  const useGrid = !isNarrow && photoLayout === "grid-collage" && urls.length >= 4;
 
   return (
     <div className={`w-full ${framePadding}`}>
-      <div className="flex flex-col items-center gap-2">
-        {urls.map((url, index) => (
+      <div className={`items-center ${useGrid ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}`}>
+        {(useGrid ? urls.slice(0, 4) : urls).map((url, index) => (
           <figure
             key={`${url}-${index}`}
             className="relative w-full overflow-hidden border border-black"
@@ -52,7 +56,7 @@ export function ReceiptPhotoBlock({
             <div
               className="relative w-full bg-white"
               style={{
-                aspectRatio: ASPECT_RATIO_STYLE[photoAspect],
+                aspectRatio: useGrid ? "1 / 1" : ASPECT_RATIO_STYLE[photoAspect],
                 filter: `grayscale(1) contrast(${thermal.contrast}) brightness(${thermal.brightness})`,
               }}
             >
