@@ -552,8 +552,8 @@ export function BoothApp() {
       {receiptProps && (step === "receipt" || step === "print") ? (
         <div
           aria-hidden
-          className="pointer-events-none fixed left-0 top-0 z-[-1] opacity-0"
-          style={{ width: "max-content", height: "max-content" }}
+          className="pointer-events-none fixed top-0 z-[-1]"
+          style={{ left: "calc(100vw + 64px)", width: "max-content", height: "max-content" }}
         >
           <ReceiptPrintLayout {...receiptProps} id="booth-receipt-export" />
         </div>
