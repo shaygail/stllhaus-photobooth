@@ -34,10 +34,13 @@ export async function captureReceiptPrintRoot(
         if (!root) return;
         const imgs = [...root.querySelectorAll("img")] as HTMLImageElement[];
         for (const img of imgs) {
-          // Keep source pixels only; style filters/transforms can make iOS raster blank.
+          // Keep source pixels with explicit cover sizing in clone to avoid stretch.
           img.style.filter = "none";
-          img.style.transform = "none";
           img.style.mixBlendMode = "normal";
+          img.style.width = "100%";
+          img.style.height = "100%";
+          img.style.objectFit = "cover";
+          img.style.objectPosition = "center";
         }
         const grain = root.querySelectorAll("[data-receipt-grain]");
         grain.forEach((el) => {
