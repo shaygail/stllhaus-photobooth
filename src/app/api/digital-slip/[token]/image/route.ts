@@ -11,7 +11,7 @@ export async function GET(
 ) {
   const { token } = await context.params;
   const slip = getDigitalSlip(token);
-  if (!slip) {
+  if (!slip || !slip.imageDataUrl) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   try {

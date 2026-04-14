@@ -5,7 +5,7 @@
  */
 
 export type DigitalSlipRecord = {
-  imageDataUrl: string;
+  imageDataUrl?: string;
   layoutDataUrl?: string;
   email?: string;
   createdAt: number;
@@ -34,18 +34,20 @@ function prune() {
 }
 
 export function createDigitalSlip(
-  imageDataUrl: string,
+  imageDataUrl?: string,
   layoutDataUrl?: string,
 ): string {
   prune();
-  if (
-    typeof imageDataUrl !== "string" ||
-    !imageDataUrl.startsWith("data:image/")
-  ) {
-    throw new Error("Invalid image payload");
-  }
-  if (imageDataUrl.length > MAX_DATA_URL_CHARS) {
-    throw new Error("Image too large");
+  if (imageDataUrl) {
+    if (
+      typeof imageDataUrl !== "string" ||
+      !imageDataUrl.startsWith("data:image/")
+    ) {
+      throw new Error("Invalid image payload");
+    }
+    if (imageDataUrl.length > MAX_DATA_URL_CHARS) {
+      throw new Error("Image too large");
+    }
   }
   if (!layoutDataUrl) {
     throw new Error("Missing final receipt asset");

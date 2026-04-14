@@ -331,7 +331,6 @@ export function BoothApp() {
 
   const handlePrint = useCallback(async () => {
     if (!receiptProps) return;
-    const colourSnap = capturedPhotos[0] ?? null;
     const layoutSnap = await captureFinalLayout();
     setIsPrinting(true);
     setPrintPhase("sending");
@@ -344,7 +343,7 @@ export function BoothApp() {
     setDigitalToken(null);
     setDigitalSlipStatus("creating");
     setStep("done");
-    if (!colourSnap || !layoutSnap) {
+    if (!layoutSnap) {
       setDigitalSlipStatus("fail");
       return;
     }
@@ -354,7 +353,6 @@ export function BoothApp() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            imageDataUrl: colourSnap,
             layoutDataUrl: layoutSnap,
           }),
         });
@@ -367,16 +365,15 @@ export function BoothApp() {
         setDigitalSlipStatus("fail");
       }
     })();
-  }, [receiptProps, copies, capturedPhotos, captureFinalLayout]);
+  }, [receiptProps, copies, captureFinalLayout]);
 
   const handleQrOnly = useCallback(async () => {
     if (!receiptProps) return;
-    const colourSnap = capturedPhotos[0] ?? null;
     const layoutSnap = await captureFinalLayout();
     setDigitalToken(null);
     setDigitalSlipStatus("creating");
     setStep("done");
-    if (!colourSnap || !layoutSnap) {
+    if (!layoutSnap) {
       setDigitalSlipStatus("fail");
       return;
     }
@@ -385,7 +382,6 @@ export function BoothApp() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageDataUrl: colourSnap,
           layoutDataUrl: layoutSnap,
         }),
       });
@@ -399,7 +395,7 @@ export function BoothApp() {
     } catch {
       setDigitalSlipStatus("fail");
     }
-  }, [receiptProps, capturedPhotos, captureFinalLayout]);
+  }, [receiptProps, captureFinalLayout]);
 
   const handleLayoutContinue = useCallback(() => {
     const lensForSession =
