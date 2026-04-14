@@ -67,6 +67,7 @@ export function BoothApp() {
   const [isCounting, setIsCounting] = useState(false);
   const [countDisplay, setCountDisplay] = useState<number | null>(null);
   const countTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const finalLayoutSnapRef = useRef<string | null>(null);
 
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
   const [capturedAt, setCapturedAt] = useState<Date | null>(null);
@@ -295,15 +296,40 @@ export function BoothApp() {
     setTimeout(() => setToast(null), 4200);
   }, []);
 
-  const handlePrint = useCallback(async () => {
-    if (!receiptProps) return;
-    const colourSnap = capturedPhotos[0] ?? null;
+  const captureFinalLayout = useCallback(async (): Promise<string | null> => {
     const exportEl = document.getElementById(
       "booth-receipt-export",
     ) as HTMLElement | null;
-    const layoutSnap = exportEl
-      ? await captureReceiptPrintRoot(exportEl)
-      : null;
+    if (!exportEl) return finalLayoutSnapRef.current;
+    for (let i = 0; i < 3; i += 1) {
+      const snap = await captureReceiptPrintRoot(exportEl);
+      if (snap) {
+        finalLayoutSnapRef.current = snap;
+        return snap;
+      }
+      await delay(90);
+    }
+    return finalLayoutSnapRef.current;
+  }, []);
+
+  useEffect(() => {
+    if (!(step === "receipt" || step === "print")) return;
+    if (!receiptProps) return;
+    let cancelled = false;
+    void (async () => {
+      const snap = await captureFinalLayout();
+      if (cancelled || !snap) return;
+      finalLayoutSnapRef.current = snap;
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [step, receiptProps, captureFinalLayout]);
+
+  const handlePrint = useCallback(async () => {
+    if (!receiptProps) return;
+    const colourSnap = capturedPhotos[0] ?? null;
+    const layoutSnap = await captureFinalLayout();
     setIsPrinting(true);
     setPrintPhase("sending");
     setPrinterConn("ready");
@@ -338,7 +364,7 @@ export function BoothApp() {
         setDigitalSlipStatus("fail");
       }
     })();
-  }, [receiptProps, copies, capturedPhotos]);
+  }, [receiptProps, copies, capturedPhotos, captureFinalLayout]);
 
   const handleLayoutContinue = useCallback(() => {
     const lensForSession =
