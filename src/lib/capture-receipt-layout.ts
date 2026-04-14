@@ -20,7 +20,44 @@ export async function captureReceiptPrintRoot(
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
     });
 
-    const canvas = await html2canvas(node, {
+    // Capture a mounted clone instead of the hidden live node.
+    // Some mobile WebKit builds return empty output from offscreen/hidden nodes.
+    const clone = node.cloneNode(true) as HTMLElement;
+    clone.id = `${node.id || "receipt-print-root"}-capture-clone`;
+    clone.setAttribute("aria-hidden", "true");
+    clone.style.position = "fixed";
+    clone.style.left = "24px";
+    clone.style.top = "24px";
+    clone.style.zIndex = "2147483647";
+    clone.style.pointerEvents = "none";
+    clone.style.opacity = "1";
+    clone.style.visibility = "visible";
+    clone.style.transform = "none";
+    clone.style.background = "#ffffff";
+
+    const imgs = [...clone.querySelectorAll("img")] as HTMLImageElement[];
+    for (const img of imgs) {
+      // Keep source pixels with explicit cover sizing in clone to avoid stretch
+      // and avoid WebKit filter/transform raster issues.
+      img.style.filter = "none";
+      img.style.mixBlendMode = "normal";
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "cover";
+      img.style.objectPosition = "center";
+    }
+    const grain = clone.querySelectorAll("[data-receipt-grain]");
+    grain.forEach((el) => {
+      (el as HTMLElement).style.display = "none";
+    });
+
+    document.body.appendChild(clone);
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+
+    const canvas = await html2canvas(clone, {
       backgroundColor: "#ffffff",
       scale: pixelRatio,
       useCORS: true,
@@ -29,27 +66,12 @@ export async function captureReceiptPrintRoot(
       imageTimeout: 0,
       removeContainer: true,
       foreignObjectRendering: false,
-      onclone: (doc) => {
-        const root = doc.getElementById(node.id);
-        if (!root) return;
-        const imgs = [...root.querySelectorAll("img")] as HTMLImageElement[];
-        for (const img of imgs) {
-          // Keep source pixels with explicit cover sizing in clone to avoid stretch.
-          img.style.filter = "none";
-          img.style.mixBlendMode = "normal";
-          img.style.width = "100%";
-          img.style.height = "100%";
-          img.style.objectFit = "cover";
-          img.style.objectPosition = "center";
-        }
-        const grain = root.querySelectorAll("[data-receipt-grain]");
-        grain.forEach((el) => {
-          (el as HTMLElement).style.display = "none";
-        });
-      },
     });
+    clone.remove();
     return canvas.toDataURL("image/jpeg", quality);
   } catch {
+    const stale = document.getElementById(`${node.id || "receipt-print-root"}-capture-clone`);
+    stale?.remove();
     return null;
   }
 }
