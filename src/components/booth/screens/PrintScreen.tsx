@@ -10,6 +10,7 @@ type PrintScreenProps = {
   isPrinting: boolean;
   printPhase: "idle" | "sending" | "done";
   onPrint: () => void;
+  onQrOnly: () => void;
   onBack: () => void;
 };
 
@@ -29,6 +30,7 @@ export function PrintScreen({
   isPrinting,
   printPhase,
   onPrint,
+  onQrOnly,
   onBack,
 }: PrintScreenProps) {
   return (
@@ -89,6 +91,14 @@ export function PrintScreen({
           className="min-h-[56px]"
         >
           {isPrinting ? "Printing…" : "Print my strip"}
+        </BoothTapButton>
+        <BoothTapButton
+          variant="secondary"
+          onClick={onQrOnly}
+          disabled={isPrinting}
+          className="min-h-[52px]"
+        >
+          QR test only (no printer)
         </BoothTapButton>
         <BoothTapButton variant="ghost" onClick={onBack} disabled={isPrinting}>
           Back to preview

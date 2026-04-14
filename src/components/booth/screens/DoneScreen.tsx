@@ -113,6 +113,9 @@ export function DoneScreen({
             <div className="rounded-2xl border border-black/10 bg-white p-3 shadow-sm">
               <QRCode value={digitalViewUrl} size={168} level="M" />
             </div>
+            <p className="max-w-[20rem] break-all text-center text-[10px] leading-relaxed text-[var(--booth-walnut)]/70">
+              {digitalViewUrl}
+            </p>
             <p className="max-w-[14rem] text-center text-[10px] uppercase leading-relaxed tracking-[0.14em] text-[var(--booth-walnut)]/65">
               Scan with your phone · link stays gentle for 24 hours
             </p>

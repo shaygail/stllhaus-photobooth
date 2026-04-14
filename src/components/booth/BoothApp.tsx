@@ -369,6 +369,38 @@ export function BoothApp() {
     })();
   }, [receiptProps, copies, capturedPhotos, captureFinalLayout]);
 
+  const handleQrOnly = useCallback(async () => {
+    if (!receiptProps) return;
+    const colourSnap = capturedPhotos[0] ?? null;
+    const layoutSnap = await captureFinalLayout();
+    setDigitalToken(null);
+    setDigitalSlipStatus("creating");
+    setStep("done");
+    if (!colourSnap || !layoutSnap) {
+      setDigitalSlipStatus("fail");
+      return;
+    }
+    try {
+      const res = await fetch("/api/digital-slip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageDataUrl: colourSnap,
+          layoutDataUrl: layoutSnap,
+        }),
+      });
+      const data = (await res.json()) as { token?: string; error?: string };
+      if (!res.ok) throw new Error(data.error || "Could not create link");
+      if (!data.token) throw new Error("Missing token");
+      setDigitalToken(data.token);
+      setDigitalSlipStatus("ready");
+      setToast("QR test ready — no printer needed.");
+      setTimeout(() => setToast(null), 3200);
+    } catch {
+      setDigitalSlipStatus("fail");
+    }
+  }, [receiptProps, capturedPhotos, captureFinalLayout]);
+
   const handleLayoutContinue = useCallback(() => {
     const lensForSession =
       receiptPhotoCount > 1 ? ("wide06" as const) : ("normal" as const);
@@ -537,6 +569,7 @@ export function BoothApp() {
           isPrinting={isPrinting}
           printPhase={printPhase}
           onPrint={() => void handlePrint()}
+          onQrOnly={() => void handleQrOnly()}
           onBack={() => setStep("receipt")}
         />
       ) : null}
