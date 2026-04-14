@@ -29,6 +29,21 @@ export async function captureReceiptPrintRoot(
       imageTimeout: 0,
       removeContainer: true,
       foreignObjectRendering: false,
+      onclone: (doc) => {
+        const root = doc.getElementById(node.id);
+        if (!root) return;
+        const imgs = [...root.querySelectorAll("img")] as HTMLImageElement[];
+        for (const img of imgs) {
+          // Keep source pixels only; style filters/transforms can make iOS raster blank.
+          img.style.filter = "none";
+          img.style.transform = "none";
+          img.style.mixBlendMode = "normal";
+        }
+        const grain = root.querySelectorAll("[data-receipt-grain]");
+        grain.forEach((el) => {
+          (el as HTMLElement).style.display = "none";
+        });
+      },
     });
     return canvas.toDataURL("image/jpeg", quality);
   } catch {
