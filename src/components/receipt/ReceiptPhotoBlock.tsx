@@ -52,15 +52,15 @@ export function ReceiptPhotoBlock({
             key={`${url}-${index}`}
             className="relative w-full overflow-hidden border border-black"
           >
-            {/* Thermal-friendly treatment: monochrome, lifted contrast, subtle grain */}
+            {/* Thermal-friendly treatment: monochrome, lifted contrast, subtle grain.
+                Filter must live on the <img> (not a wrapper) so html-to-image / SVG
+                foreignObject captures include the bitmap; filters on parents often raster blank. */}
             <div
               className="relative w-full bg-white"
               style={{
                 aspectRatio: useGrid ? "1 / 1" : ASPECT_RATIO_STYLE[photoAspect],
-                filter: `grayscale(1) contrast(${thermal.contrast}) brightness(${thermal.brightness})`,
               }}
             >
-              {/* Raw img: dynamic booth / blob URLs and CSS thermal filters */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={url}
@@ -69,6 +69,7 @@ export function ReceiptPhotoBlock({
                 style={{
                   imageRendering: "auto",
                   transform: `scale(${BOOTH_PHOTO_DISPLAY_SCALE})`,
+                  filter: `grayscale(1) contrast(${thermal.contrast}) brightness(${thermal.brightness})`,
                 }}
                 draggable={false}
               />

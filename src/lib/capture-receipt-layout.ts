@@ -33,11 +33,22 @@ export async function captureReceiptPrintRoot(
       ),
     );
 
+    for (const img of imgs) {
+      if (typeof img.decode === "function") {
+        try {
+          await img.decode();
+        } catch {
+          /* still attempt capture */
+        }
+      }
+    }
+
     return await toJpeg(node, {
       quality,
       pixelRatio,
       backgroundColor: "#ffffff",
-      cacheBust: true,
+      // `true` appends ?t=… to every URL; that breaks valid data:/blob: URLs when re-fetched.
+      cacheBust: false,
     });
   } catch {
     return null;
