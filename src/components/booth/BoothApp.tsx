@@ -123,7 +123,7 @@ export function BoothApp() {
     backLens,
     setBackLens,
     hasUltraWideBack,
-    resetBackLens,
+    resetCameraDefaults,
     isStarting,
     start,
     stop,
@@ -277,8 +277,8 @@ export function BoothApp() {
     setDigitalToken(null);
     setCustomerLayoutId("classic");
     setReceiptPhotoCount(2);
-    resetBackLens();
-  }, [resetBackLens]);
+    resetCameraDefaults();
+  }, [resetCameraDefaults]);
 
   const handleWelcomeStart = useCallback(() => {
     resetSession();
@@ -526,7 +526,8 @@ export function BoothApp() {
       {receiptProps && (step === "receipt" || step === "print") ? (
         <div
           aria-hidden
-          className="pointer-events-none fixed left-0 top-0 -translate-x-[120vw]"
+          className="pointer-events-none fixed left-0 top-0 z-[-1] opacity-0"
+          style={{ width: "max-content", height: "max-content" }}
         >
           <ReceiptPrintLayout {...receiptProps} id="booth-receipt-export" />
         </div>

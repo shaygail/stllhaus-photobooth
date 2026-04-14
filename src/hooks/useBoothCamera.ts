@@ -25,7 +25,8 @@ type UseBoothCameraResult = {
   setBackLens: (l: BackLens) => void;
   /** True when a separate ultra-wide back camera was detected (0.5× option). */
   hasUltraWideBack: boolean;
-  resetBackLens: () => void;
+  /** Front-facing default + 1× back lens; call on new guest session. */
+  resetCameraDefaults: () => void;
   isStarting: boolean;
   start: (opts?: StartCameraOptions) => Promise<void>;
   stop: () => void;
@@ -39,7 +40,7 @@ export function useBoothCamera(): UseBoothCameraResult {
   const backLensRef = useRef<BackLens>("normal");
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<CameraFacing>("environment");
+  const [facingMode, setFacingMode] = useState<CameraFacing>("user");
   const [backLens, setBackLensState] = useState<BackLens>("normal");
   const [hasUltraWideBack, setHasUltraWideBack] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -161,7 +162,8 @@ export function useBoothCamera(): UseBoothCameraResult {
     setFacingMode((m) => (m === "environment" ? "user" : "environment"));
   }, []);
 
-  const resetBackLens = useCallback(() => {
+  const resetCameraDefaults = useCallback(() => {
+    setFacingMode("user");
     backLensRef.current = "normal";
     setBackLensState("normal");
   }, []);
@@ -214,7 +216,7 @@ export function useBoothCamera(): UseBoothCameraResult {
     backLens,
     setBackLens,
     hasUltraWideBack,
-    resetBackLens,
+    resetCameraDefaults,
     isStarting,
     start,
     stop,
