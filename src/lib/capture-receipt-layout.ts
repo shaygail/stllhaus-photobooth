@@ -61,7 +61,8 @@ export async function captureReceiptPrintRoot(
       backgroundColor: "#ffffff",
       scale: pixelRatio,
       useCORS: true,
-      allowTaint: true,
+      // Must stay false so canvas remains exportable via toDataURL().
+      allowTaint: false,
       logging: false,
       imageTimeout: 0,
       removeContainer: true,
