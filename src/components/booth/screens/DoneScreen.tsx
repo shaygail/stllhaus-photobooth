@@ -47,7 +47,7 @@ export function DoneScreen({
       setEmailStatus("sent");
       setEmailMessage(
         res.message ??
-          "You’re on the list. We’ll send your colour keepsake when email is connected.",
+          "You’re on the list. We’ll send your receipt keepsake when email is connected.",
       );
     } else {
       setEmailStatus("error");
@@ -87,11 +87,11 @@ export function DoneScreen({
 
       <section className="rounded-3xl bg-[var(--booth-cream)]/85 p-5 shadow-sm ring-1 ring-black/5 backdrop-blur-sm">
         <p className="text-center text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--booth-walnut)]/55">
-          Digital colour keepsake
+          Digital receipt keepsake
         </p>
         <p className="mt-2 text-center text-sm leading-relaxed text-[var(--booth-walnut)]/85">
-          Scan for your full-colour photo in a soft STLL HAUS layout — perfect
-          for saving or sharing.
+          Scan for the same thermal-style receipt strip you approved before
+          printing — ready to save or share.
         </p>
 
         {digitalSlipStatus === "creating" ? (
@@ -119,9 +119,9 @@ export function DoneScreen({
             <p className="max-w-[18rem] text-center text-xs leading-relaxed text-[var(--booth-walnut)]/80">
               On your phone, open the link, then use{" "}
               <span className="font-semibold text-[var(--booth-ink)]">
-                Download JPEG
+                Download receipt layout
               </span>{" "}
-              or long-press the photo to save to Photos.
+              or long-press the strip to save to Photos.
             </p>
           </div>
         ) : null}

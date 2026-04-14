@@ -73,12 +73,15 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
     meta.status === "ok" && meta.hasLayout ? relLayoutDownload : relDownload;
   const primaryLabel =
     meta.status === "ok" && meta.hasLayout
-      ? "Download colour layout"
+      ? "Download receipt layout"
       : "Download JPEG";
   const primaryOpenLabel =
     meta.status === "ok" && meta.hasLayout
-      ? "Open colour layout"
+      ? "Open receipt layout"
       : "Open full image";
+
+  const layoutPrimary =
+    meta.status === "ok" && meta.hasLayout;
 
   const imgSrc =
     meta.status === "ok"
@@ -226,7 +229,7 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
       }
       if (!ct.startsWith("image/")) {
         setDownloadError(
-          "The booth did not return a JPEG. Ask staff to try again or use “Open full image”.",
+          `The booth did not return a JPEG. Ask staff to try again or use “${primaryOpenLabel}”.`,
         );
         return;
       }
@@ -251,7 +254,7 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
     } finally {
       setDownloadBusy(false);
     }
-  }, [meta, primaryRelDownload, abs]);
+  }, [meta, primaryRelDownload, primaryOpenLabel, abs]);
 
   if (meta.status === "loading") {
     return (
@@ -323,13 +326,15 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
             STLL HAUS
           </p>
           <h1 className="mt-2 text-2xl font-light tracking-tight text-stone-900">
-            Your colour keepsake
+            Your receipt keepsake
           </h1>
           <p className="mt-2 text-sm text-stone-600">{dateLine}</p>
         </header>
 
         <div className="overflow-hidden rounded-[1.75rem] bg-[#fdfcfa] p-4 shadow-[0_20px_60px_-28px_rgba(0,0,0,0.35)] ring-1 ring-black/[0.06]">
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-[#f6f4f0] shadow-inner">
+          <div
+            className={`relative w-full overflow-hidden rounded-2xl bg-[#f6f4f0] shadow-inner ${layoutPrimary ? "aspect-[2/5] min-h-[280px] sm:aspect-[3/7]" : "aspect-[3/4]"}`}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               key={imgSrc}
@@ -338,8 +343,12 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
               decoding="async"
               onLoad={onPhotoLoad}
               onError={onPhotoError}
-              className="absolute inset-0 z-0 h-full w-full origin-center object-cover object-center"
-              style={{ transform: `scale(${BOOTH_PHOTO_DISPLAY_SCALE})` }}
+              className={`absolute inset-0 z-0 h-full w-full origin-center ${
+                layoutPrimary ? "object-contain object-top" : "object-cover object-center"
+              }`}
+              style={
+                layoutPrimary ? undefined : { transform: `scale(${BOOTH_PHOTO_DISPLAY_SCALE})` }
+              }
             />
             {!imgReady && !imgFailed ? (
               <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-[#f6f4f0]/90 text-xs text-stone-500">

@@ -4,7 +4,7 @@ import { getDigitalSlip } from "@/lib/digital-slip-store";
 
 export const runtime = "nodejs";
 
-/** Attachment download for the coloured receipt-style layout image */
+/** Attachment download for the composed receipt strip JPEG */
 export async function GET(
   _request: Request,
   context: { params: Promise<{ token: string }> },
