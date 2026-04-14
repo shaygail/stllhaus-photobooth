@@ -119,6 +119,11 @@ export function BoothApp() {
     videoRef,
     stream,
     error,
+    facingMode,
+    backLens,
+    setBackLens,
+    hasUltraWideBack,
+    resetBackLens,
     isStarting,
     start,
     stop,
@@ -272,7 +277,8 @@ export function BoothApp() {
     setDigitalToken(null);
     setCustomerLayoutId("classic");
     setReceiptPhotoCount(2);
-  }, []);
+    resetBackLens();
+  }, [resetBackLens]);
 
   const handleWelcomeStart = useCallback(() => {
     resetSession();
@@ -335,12 +341,15 @@ export function BoothApp() {
   }, [receiptProps, copies, capturedPhotos]);
 
   const handleLayoutContinue = useCallback(() => {
+    const lensForSession =
+      receiptPhotoCount > 1 ? ("wide06" as const) : ("normal" as const);
     cameraStartedInGesture.current = true;
     flushSync(() => {
+      setBackLens(lensForSession);
       setStep("camera");
     });
-    void start();
-  }, [start]);
+    void start({ lens: lensForSession });
+  }, [receiptPhotoCount, setBackLens, start]);
 
   const handlePhotoCountChange = useCallback(
     (count: ReceiptPhotoCount) => {
@@ -417,6 +426,10 @@ export function BoothApp() {
           videoRef={videoRef}
           countdownChoice={countdownChoice}
           onCountdownChange={setCountdownChoice}
+          backLens={backLens}
+          onBackLensChange={setBackLens}
+          hasUltraWideBack={hasUltraWideBack}
+          facingMode={facingMode}
           onCapture={handleCapture}
           onSwitchCamera={() => void switchCamera()}
           onBack={() => {

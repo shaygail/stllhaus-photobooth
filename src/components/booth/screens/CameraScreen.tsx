@@ -3,12 +3,17 @@ import { BoothMark } from "@/components/booth/BoothMark";
 import { BoothShell } from "@/components/booth/BoothShell";
 import { BoothTapButton } from "@/components/booth/BoothTapButton";
 import type { BoothStaffPressProps } from "@/components/booth/BoothMark";
+import type { BackLens } from "@/hooks/useBoothCamera";
 import type { CountdownChoice } from "@/types/booth";
 
 type CameraScreenProps = {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   countdownChoice: CountdownChoice;
   onCountdownChange: (v: CountdownChoice) => void;
+  backLens: BackLens;
+  onBackLensChange: (l: BackLens) => void;
+  hasUltraWideBack: boolean;
+  facingMode: "environment" | "user";
   onCapture: () => void;
   onSwitchCamera: () => void;
   onBack: () => void;
@@ -26,6 +31,10 @@ export function CameraScreen({
   videoRef,
   countdownChoice,
   onCountdownChange,
+  backLens,
+  onBackLensChange,
+  hasUltraWideBack,
+  facingMode,
   onCapture,
   onSwitchCamera,
   onBack,
@@ -36,6 +45,7 @@ export function CameraScreen({
   countDisplay,
   staffMarkProps,
 }: CameraScreenProps) {
+  const showLens = facingMode === "environment";
   return (
     <BoothShell className="flex flex-col gap-5">
       <header className="flex items-center justify-between gap-3">
@@ -105,6 +115,51 @@ export function CameraScreen({
           ))}
         </div>
       </section>
+
+      {showLens ? (
+        <section className="space-y-3">
+          <p className="text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--booth-walnut)]/60">
+            Back lens (1× solo · 0.5× group)
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onBackLensChange("normal")}
+              disabled={isCounting || !hasStream}
+              className={`rounded-2xl py-3 text-sm font-semibold transition ${
+                backLens === "normal"
+                  ? "bg-[var(--booth-ink)] text-[var(--booth-cream)]"
+                  : "bg-[var(--booth-cream)]/70 text-[var(--booth-ink)] ring-1 ring-[var(--booth-walnut)]/15"
+              }`}
+            >
+              1×
+            </button>
+            <button
+              type="button"
+              onClick={() => onBackLensChange("wide06")}
+              disabled={isCounting || !hasStream || !hasUltraWideBack}
+              title={
+                hasUltraWideBack
+                  ? "Ultra-wide (about 0.5× — best for groups)"
+                  : "Ultra-wide lens not reported by this device or browser"
+              }
+              className={`rounded-2xl py-3 text-sm font-semibold transition ${
+                backLens === "wide06"
+                  ? "bg-[var(--booth-ink)] text-[var(--booth-cream)]"
+                  : "bg-[var(--booth-cream)]/70 text-[var(--booth-ink)] ring-1 ring-[var(--booth-walnut)]/15"
+              } ${!hasUltraWideBack ? "opacity-50" : ""}`}
+            >
+              0.5×
+            </button>
+          </div>
+          {!hasUltraWideBack ? (
+            <p className="text-center text-[10px] leading-relaxed text-[var(--booth-walnut)]/55">
+              0.5× needs a separate ultra-wide camera (many phones). On a single-lens Mac or webcam,
+              use 1× only.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3">
         <BoothTapButton
