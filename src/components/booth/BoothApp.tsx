@@ -114,6 +114,7 @@ export function BoothApp() {
   const [digitalSlipStatus, setDigitalSlipStatus] =
     useState<DigitalSlipUiStatus>("idle");
   const [digitalToken, setDigitalToken] = useState<string | null>(null);
+  const [digitalSlipError, setDigitalSlipError] = useState<string | null>(null);
   const [origin, setOrigin] = useState("");
 
   const {
@@ -275,6 +276,7 @@ export function BoothApp() {
     if (countTimer.current) clearInterval(countTimer.current);
     countTimer.current = null;
     setDigitalSlipStatus("idle");
+    setDigitalSlipError(null);
     setDigitalToken(null);
     setCustomerLayoutId("classic");
     setReceiptPhotoCount(2);
@@ -341,9 +343,11 @@ export function BoothApp() {
     setIsPrinting(false);
     await delay(650);
     setDigitalToken(null);
+    setDigitalSlipError(null);
     setDigitalSlipStatus("creating");
     setStep("done");
     if (!layoutSnap) {
+      setDigitalSlipError("Layout capture returned empty.");
       setDigitalSlipStatus("fail");
       return;
     }
@@ -357,11 +361,12 @@ export function BoothApp() {
           }),
         });
         const data = (await res.json()) as { token?: string; error?: string };
-        if (!res.ok) throw new Error(data.error || "Could not create link");
+        if (!res.ok) throw new Error(data.error || `Could not create link (${res.status})`);
         if (!data.token) throw new Error("Missing token");
         setDigitalToken(data.token);
         setDigitalSlipStatus("ready");
-      } catch {
+      } catch (e) {
+        setDigitalSlipError(e instanceof Error ? e.message : "Unknown error creating link.");
         setDigitalSlipStatus("fail");
       }
     })();
@@ -371,9 +376,11 @@ export function BoothApp() {
     if (!receiptProps) return;
     const layoutSnap = await captureFinalLayout();
     setDigitalToken(null);
+    setDigitalSlipError(null);
     setDigitalSlipStatus("creating");
     setStep("done");
     if (!layoutSnap) {
+      setDigitalSlipError("Layout capture returned empty.");
       setDigitalSlipStatus("fail");
       return;
     }
@@ -386,13 +393,14 @@ export function BoothApp() {
         }),
       });
       const data = (await res.json()) as { token?: string; error?: string };
-      if (!res.ok) throw new Error(data.error || "Could not create link");
+      if (!res.ok) throw new Error(data.error || `Could not create link (${res.status})`);
       if (!data.token) throw new Error("Missing token");
       setDigitalToken(data.token);
       setDigitalSlipStatus("ready");
       setToast("QR test ready — no printer needed.");
       setTimeout(() => setToast(null), 3200);
-    } catch {
+    } catch (e) {
+      setDigitalSlipError(e instanceof Error ? e.message : "Unknown error creating link.");
       setDigitalSlipStatus("fail");
     }
   }, [receiptProps, captureFinalLayout]);
@@ -576,6 +584,7 @@ export function BoothApp() {
           instagramText={settings.instagramText}
           onStartOver={handleStartOver}
           digitalSlipStatus={digitalSlipStatus}
+          digitalSlipError={digitalSlipError}
           digitalViewUrl={digitalViewUrl}
           onSubmitEmail={handleSubmitDigitalEmail}
         />

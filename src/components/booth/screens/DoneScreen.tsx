@@ -12,6 +12,7 @@ type DoneScreenProps = {
   instagramText?: string;
   onStartOver: () => void;
   digitalSlipStatus: DigitalSlipUiStatus;
+  digitalSlipError?: string | null;
   digitalViewUrl: string | null;
   onSubmitEmail: (email: string) => Promise<{ ok: boolean; message?: string }>;
 };
@@ -23,6 +24,7 @@ export function DoneScreen({
   instagramText,
   onStartOver,
   digitalSlipStatus,
+  digitalSlipError,
   digitalViewUrl,
   onSubmitEmail,
 }: DoneScreenProps) {
@@ -102,10 +104,17 @@ export function DoneScreen({
         ) : null}
 
         {digitalSlipStatus === "fail" ? (
-          <p className="mt-6 text-center text-sm text-amber-900/90">
-            Digital link isn&apos;t available offline or right now. Your print
-            is still fine — ask staff if you need help.
-          </p>
+          <div className="mt-6 space-y-2 text-center">
+            <p className="text-sm text-amber-900/90">
+              Digital link isn&apos;t available offline or right now. Your print
+              is still fine — ask staff if you need help.
+            </p>
+            {digitalSlipError ? (
+              <p className="mx-auto max-w-[22rem] break-words rounded-xl border border-amber-300/60 bg-amber-50/70 px-3 py-2 text-[11px] leading-relaxed text-amber-950/90">
+                Debug: {digitalSlipError}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         {digitalSlipStatus === "ready" && digitalViewUrl ? (
