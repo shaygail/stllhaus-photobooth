@@ -47,16 +47,17 @@ export function createDigitalSlip(
   if (imageDataUrl.length > MAX_DATA_URL_CHARS) {
     throw new Error("Image too large");
   }
-  if (layoutDataUrl) {
-    if (
-      typeof layoutDataUrl !== "string" ||
-      !layoutDataUrl.startsWith("data:image/")
-    ) {
-      throw new Error("Invalid layout payload");
-    }
-    if (layoutDataUrl.length > MAX_DATA_URL_CHARS) {
-      throw new Error("Layout image too large");
-    }
+  if (!layoutDataUrl) {
+    throw new Error("Missing final receipt asset");
+  }
+  if (
+    typeof layoutDataUrl !== "string" ||
+    !layoutDataUrl.startsWith("data:image/")
+  ) {
+    throw new Error("Invalid layout payload");
+  }
+  if (layoutDataUrl.length > MAX_DATA_URL_CHARS) {
+    throw new Error("Layout image too large");
   }
   const token = crypto.randomUUID();
   slips.set(token, { imageDataUrl, layoutDataUrl, createdAt: Date.now() });

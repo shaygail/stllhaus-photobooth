@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       layoutDataUrl?: string;
     };
     const token = createDigitalSlip(body.imageDataUrl ?? "", body.layoutDataUrl);
-    return NextResponse.json({ token });
+    return NextResponse.json({ token, receiptUrl: `/receipt/${token}` });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Bad request";
     return NextResponse.json({ error: message }, { status: 400 });

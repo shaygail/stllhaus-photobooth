@@ -315,7 +315,7 @@ export function BoothApp() {
     setDigitalToken(null);
     setDigitalSlipStatus("creating");
     setStep("done");
-    if (!colourSnap) {
+    if (!colourSnap || !layoutSnap) {
       setDigitalSlipStatus("fail");
       return;
     }
@@ -362,7 +362,7 @@ export function BoothApp() {
   const digitalViewUrl = useMemo(() => {
     if (!digitalToken || !origin) return null;
     const base = resolveBoothPublicOrigin(settings.publicSiteUrl, origin);
-    return `${base}/digital/${digitalToken}`;
+    return `${base}/receipt/${digitalToken}`;
   }, [digitalToken, origin, settings.publicSiteUrl]);
 
   const handleSubmitDigitalEmail = useCallback(
