@@ -15,6 +15,7 @@ export {
   type ReceiptDisplayToggles,
   type ReceiptPhotoAspect,
   type ReceiptPhotoLayout,
+  type ReceiptLayoutVariant,
   type ReceiptPrintProps,
   type ReceiptThermalAdjust,
 } from "./types";

@@ -18,6 +18,26 @@ type LayoutSelectScreenProps = {
   onContinue: () => void;
 };
 
+function MockPhotoFill({ tone = "base" }: { tone?: "base" | "soft" | "deep" }) {
+  const bg =
+    tone === "deep"
+      ? "linear-gradient(160deg, rgba(50,46,40,0.5) 0%, rgba(109,96,84,0.26) 55%, rgba(230,223,214,0.7) 100%)"
+      : tone === "soft"
+        ? "linear-gradient(160deg, rgba(66,60,52,0.36) 0%, rgba(147,130,114,0.2) 55%, rgba(238,232,224,0.72) 100%)"
+        : "linear-gradient(160deg, rgba(44,38,32,0.44) 0%, rgba(120,105,90,0.24) 55%, rgba(234,227,218,0.72) 100%)";
+  return (
+    <div
+      className="relative h-full w-full overflow-hidden rounded-[2px] border border-black/25"
+      style={{ background: bg }}
+      aria-hidden
+    >
+      <div className="absolute left-[20%] top-[14%] h-[22%] w-[24%] rounded-full bg-white/28" />
+      <div className="absolute left-[10%] top-[33%] h-[58%] w-[74%] rounded-[40%] bg-black/14 blur-[0.5px]" />
+      <div className="absolute inset-x-0 bottom-0 h-[24%] bg-black/18" />
+    </div>
+  );
+}
+
 function LayoutMiniFrame({
   id,
   active,
@@ -25,94 +45,144 @@ function LayoutMiniFrame({
   id: CustomerLayoutId;
   active: boolean;
 }) {
+  const shellClass = `mx-auto w-full rounded-xl bg-[var(--booth-oat)]/90 p-2 ring-1 ring-inset ring-black/[0.06] ${
+    active ? "ring-2 ring-[var(--booth-ink)]/35 shadow-sm" : ""
+  }`;
+
+  if (id === "classic") {
+    return (
+      <div className={shellClass}>
+        <div className="aspect-[3/4] w-full rounded-md border border-black/35 bg-white p-1.5">
+          <div className="h-full w-full rounded-[2px] border border-black/25 p-1">
+            <div className="space-y-[2px] pb-1 text-center">
+              <div className="text-[6px] font-semibold uppercase tracking-[0.14em] text-black/90">
+                STLL SNAPS
+              </div>
+              <div className="text-[5px] tracking-[0.04em] text-black/60">
+                capture the moment, keep the memory.
+              </div>
+            </div>
+            <div className="h-[72%] w-full">
+              <MockPhotoFill tone="base" />
+            </div>
+            <div className="mt-1 h-px w-full bg-black/35" />
+            <div className="mt-1 space-y-[2px]">
+              <div className="h-[2px] w-[72%] bg-black/50" />
+              <div className="h-[2px] w-[55%] bg-black/40" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (id === "soft-square") {
+    return (
+      <div className={shellClass}>
+        <div className="aspect-[3/4] w-full rounded-md border border-black/35 bg-white p-1.5">
+          <div className="h-full w-full overflow-hidden rounded-[2px] border border-black/25 p-1">
+            <div className="h-[42%] w-full">
+              <MockPhotoFill tone="base" />
+            </div>
+            <div className="mt-1 h-[42%] w-full">
+              <MockPhotoFill tone="soft" />
+            </div>
+            <div className="mt-1 h-[2px] w-[58%] bg-black/38" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (id === "quiet") {
+    return (
+      <div className={shellClass}>
+        <div className="aspect-[3/4] w-full rounded-md border border-black/35 bg-white p-1.5">
+          <div className="h-full w-full overflow-hidden rounded-[2px] border border-black/25 p-1">
+            <div className="h-[44%] w-full">
+              <MockPhotoFill tone="deep" />
+            </div>
+            <div className="mt-1 h-[44%] w-full">
+              <MockPhotoFill tone="soft" />
+            </div>
+            <div className="mt-1 h-[2px] w-[38%] bg-black/30" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (id === "mini-grid") {
     return (
-      <div
-        className={`mx-auto rounded-xl bg-[var(--booth-oat)]/90 p-2 ring-1 ring-inset ring-black/[0.06] ${
-          active ? "ring-2 ring-[var(--booth-ink)]/35" : ""
-        }`}
-      >
-        <div className="grid h-16 w-16 grid-cols-2 gap-1">
-          <div className="rounded-sm bg-[var(--booth-walnut)]/25" />
-          <div className="rounded-sm bg-[var(--booth-walnut)]/30" />
-          <div className="rounded-sm bg-[var(--booth-walnut)]/30" />
-          <div className="rounded-sm bg-[var(--booth-walnut)]/25" />
+      <div className={shellClass}>
+        <div className="aspect-[3/4] w-full rounded-md border border-black/35 bg-white p-1.5">
+          <div className="h-full w-full rounded-[2px] border border-black/25 p-1">
+            <div className="grid h-[74%] w-full grid-cols-2 gap-1">
+              <MockPhotoFill tone="base" />
+              <MockPhotoFill tone="soft" />
+              <MockPhotoFill tone="deep" />
+              <MockPhotoFill tone="base" />
+            </div>
+            <div className="mt-1 h-px w-full bg-black/35" />
+            <div className="mt-1 h-[2px] w-[56%] bg-black/40" />
+          </div>
         </div>
       </div>
     );
   }
-  const inner =
-    id === "classic"
-      ? "h-16 w-12"
-      : id === "soft-square"
-        ? "h-12 w-12"
-        : "h-[3.75rem] w-12";
 
-  return (
-    <div
-      className={`mx-auto flex items-center justify-center rounded-xl bg-[var(--booth-oat)]/90 p-2 ring-1 ring-inset ring-black/[0.06] ${
-        active ? "ring-2 ring-[var(--booth-ink)]/35" : ""
-      }`}
-    >
-      <div
-        className={`rounded-md bg-[var(--booth-walnut)]/25 ${inner}`}
-        aria-hidden
-      />
-    </div>
-  );
-}
-
-function StripCountPreview({
-  layoutId,
-  photoCount,
-}: {
-  layoutId: CustomerLayoutId;
-  photoCount: ReceiptPhotoCount;
-}) {
-  if (layoutId === "mini-grid") {
+  if (id === "six-grid") {
     return (
-      <div className="mx-auto w-full max-w-[13rem] rounded-2xl bg-[var(--booth-cream)]/95 p-3 ring-1 ring-black/10 shadow-sm">
-        <div className="grid grid-cols-2 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-square w-full rounded-lg bg-[var(--booth-walnut)]/20"
-              aria-hidden
-            />
-          ))}
-        </div>
-        <div className="mt-3 border-t border-black/10 pt-2 text-center text-[10px] uppercase tracking-[0.15em] text-[var(--booth-walnut)]/70">
-          mini grid preview
+      <div className={shellClass}>
+        <div className="aspect-[3/4] w-full rounded-md border border-black/35 bg-white p-1.5">
+          <div className="h-full w-full rounded-[2px] border border-black/25 p-1">
+            <div className="grid h-[74%] w-full grid-cols-2 gap-1">
+              <MockPhotoFill tone="base" />
+              <MockPhotoFill tone="soft" />
+              <MockPhotoFill tone="deep" />
+              <MockPhotoFill tone="base" />
+              <MockPhotoFill tone="soft" />
+              <MockPhotoFill tone="deep" />
+            </div>
+            <div className="mt-1 h-px w-full bg-black/35" />
+            <div className="mt-1 h-[2px] w-[56%] bg-black/40" />
+          </div>
         </div>
       </div>
     );
   }
 
-  const frameClass =
-    layoutId === "classic"
-      ? "aspect-[3/4]"
-      : layoutId === "soft-square"
-        ? "aspect-square"
-        : "aspect-[4/5]";
-
-  const frames = photoCount === 3 ? [0, 1, 2] : photoCount === 2 ? [0, 1] : [0];
-
-  return (
-    <div className="mx-auto w-full max-w-[13rem] rounded-2xl bg-[var(--booth-cream)]/95 p-3 ring-1 ring-black/10 shadow-sm">
-      <div className="space-y-2">
-        {frames.map((i) => (
-          <div
-            key={i}
-            className={`w-full rounded-lg bg-[var(--booth-walnut)]/20 ${frameClass}`}
-            aria-hidden
-          />
-        ))}
+  if (id === "bottom-brand") {
+    return (
+      <div className={shellClass}>
+        <div className="aspect-[3/4] w-full rounded-md border border-black/35 bg-white p-1.5">
+          <div className="h-full w-full rounded-[2px] border border-black/25 p-1">
+            <div className="h-[68%] w-full">
+              <MockPhotoFill tone="base" />
+            </div>
+            <div className="mt-1 h-px w-full bg-black/35" />
+            <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-end gap-1">
+              <div className="space-y-[2px]">
+                <div className="h-[2px] w-[75%] bg-black/50" />
+                <div className="h-[2px] w-[62%] bg-black/40" />
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-black.png"
+                alt=""
+                className="h-auto w-4 object-contain opacity-90"
+                draggable={false}
+                aria-hidden
+              />
+              <div className="ml-auto h-4 w-4 rounded-[2px] border border-black/45 bg-white/80" />
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="mt-3 border-t border-black/10 pt-2 text-center text-[10px] uppercase tracking-[0.15em] text-[var(--booth-walnut)]/70">
-        {photoCount} photo strip preview
-      </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }
 
 export function LayoutSelectScreen({
@@ -126,6 +196,17 @@ export function LayoutSelectScreen({
   onBack,
   onContinue,
 }: LayoutSelectScreenProps) {
+  const layoutDetailText =
+    selectedId === "classic"
+      ? "Classic strip uses 1 photo."
+      : selectedId === "bottom-brand"
+        ? "Bottom logo uses 1 photo with date-left and small QR-right footer."
+      : selectedId === "mini-grid"
+        ? "Mini Grid is fixed to 4 photos on 80mm."
+      : selectedId === "six-grid"
+        ? "Six Grid is fixed to 6 photos on 80mm."
+        : "Soft Square and Quiet support 2 photos on 58mm, or 2-3 photos on 80mm.";
+
   return (
     <BoothShell className="flex flex-col gap-6">
       <header className="text-center">
@@ -133,18 +214,19 @@ export function LayoutSelectScreen({
           Before your photo
         </p>
         <h2 className="mt-2 text-2xl font-light text-[var(--booth-ink)]">
-          Choose a layout
+          Choose photo layout
         </h2>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[var(--booth-walnut)]/85">
-          Pick how your moment sits on the strip — you can always come back
-          here before printing.
+          Tap the style you want on your print strip.
         </p>
       </header>
 
-      <div className="grid gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {CUSTOMER_LAYOUT_PRESETS.map((preset) => {
           const active = preset.id === selectedId;
-          const disabled = preset.id === "mini-grid" && !miniGridEnabled;
+          const disabled =
+            (preset.id === "mini-grid" || preset.id === "six-grid") &&
+            !miniGridEnabled;
           return (
             <button
               key={preset.id}
@@ -153,7 +235,7 @@ export function LayoutSelectScreen({
                 if (!disabled) onSelect(preset.id);
               }}
               disabled={disabled}
-              className={`rounded-3xl border px-4 py-4 text-left transition ${
+              className={`h-full rounded-3xl border px-3 py-3 text-center transition ${
                 active
                   ? "border-[var(--booth-ink)]/35 bg-[var(--booth-cream)] shadow-sm"
                   : disabled
@@ -161,26 +243,25 @@ export function LayoutSelectScreen({
                     : "border-black/[0.06] bg-white/60 hover:bg-white/90"
               }`}
             >
-              <div className="flex items-center gap-4">
-                <div className="shrink-0">
+              <div className="flex h-full flex-col gap-2">
+                <div className="mx-auto w-full max-w-[6.5rem] md:max-w-[7rem]">
                   <LayoutMiniFrame id={preset.id} active={active} />
                 </div>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--booth-walnut)]/55">
+                <p className="text-sm font-semibold text-[var(--booth-ink)]">
+                  {preset.title}
+                </p>
+                <p className="min-h-[2.25rem] text-[10px] leading-relaxed text-[var(--booth-walnut)]/78">
+                  {preset.subtitle}
+                </p>
+                {disabled ? (
+                  <p className="mt-auto text-[11px] font-medium text-[var(--booth-walnut)]/70">
+                    80mm only
+                  </p>
+                ) : (
+                  <p className="mt-auto text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--booth-walnut)]/58">
                     {active ? "Selected" : "Tap to select"}
                   </p>
-                  <p className="text-base font-medium text-[var(--booth-ink)]">
-                    {preset.title}
-                  </p>
-                  <p className="text-sm leading-relaxed text-[var(--booth-walnut)]/85">
-                    {preset.subtitle}
-                  </p>
-                  {disabled ? (
-                    <p className="text-[11px] text-[var(--booth-walnut)]/70">
-                      Available on 80mm only
-                    </p>
-                  ) : null}
-                </div>
+                )}
               </div>
             </button>
           );
@@ -189,17 +270,10 @@ export function LayoutSelectScreen({
 
       <section className="space-y-2">
         <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--booth-walnut)]/60">
-          Strip preview
-        </p>
-        <StripCountPreview layoutId={selectedId} photoCount={photoCount} />
-      </section>
-
-      <section className="space-y-2">
-        <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--booth-walnut)]/60">
           Photos on one receipt ({paperWidthLabel})
         </p>
-        <div className="grid grid-cols-4 gap-2">
-          {([1, 2, 3, 4] as const).map((count) => {
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:max-w-xl md:mx-auto">
+          {([1, 2, 3, 4, 6] as const).map((count) => {
             const available = availablePhotoCounts.includes(count);
             const selected = photoCount === count;
             return (
@@ -224,7 +298,7 @@ export function LayoutSelectScreen({
           })}
         </div>
         <p className="text-center text-[11px] text-[var(--booth-walnut)]/75">
-          Stacked layouts support 2 or 3 photos. Mini Grid is fixed to 4 photos on 80mm.
+          {layoutDetailText}
         </p>
       </section>
 

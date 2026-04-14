@@ -8,6 +8,8 @@ type ReceiptQRCodeBlockProps = {
   websiteText?: string;
   instagramText?: string;
   paperWidth: PaperWidth;
+  sizeOverride?: number;
+  hideCaption?: boolean;
 };
 
 export function ReceiptQRCodeBlock({
@@ -15,9 +17,11 @@ export function ReceiptQRCodeBlock({
   websiteText,
   instagramText,
   paperWidth,
+  sizeOverride,
+  hideCaption = false,
 }: ReceiptQRCodeBlockProps) {
   const isNarrow = paperWidth === "58mm";
-  const size = isNarrow ? 72 : 88;
+  const size = sizeOverride ?? (isNarrow ? 72 : 88);
   const captionClass = isNarrow ? "text-[7px]" : "text-[8px]";
 
   return (
@@ -34,19 +38,21 @@ export function ReceiptQRCodeBlock({
           bgColor="#ffffff"
         />
       </div>
-      <div
-        className={`flex flex-col gap-0.5 ${captionClass} leading-relaxed text-black`}
-        style={{ letterSpacing: "0.05em" }}
-      >
-        {instagramText ? (
-          <span className="font-medium uppercase tracking-[0.12em]">
-            {instagramText}
-          </span>
-        ) : null}
-        {websiteText ? (
-          <span className="font-medium tracking-[0.08em]">{websiteText}</span>
-        ) : null}
-      </div>
+      {!hideCaption ? (
+        <div
+          className={`flex flex-col gap-0.5 ${captionClass} leading-relaxed text-black`}
+          style={{ letterSpacing: "0.05em" }}
+        >
+          {instagramText ? (
+            <span className="font-medium uppercase tracking-[0.12em]">
+              {instagramText}
+            </span>
+          ) : null}
+          {websiteText ? (
+            <span className="font-medium tracking-[0.08em]">{websiteText}</span>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }

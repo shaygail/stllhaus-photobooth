@@ -12,6 +12,10 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
 }
 
+function sanitizeMessageText(v: string): string {
+  return v.replace(/\s*☁️/g, "").trim();
+}
+
 export function loadBoothSettings(): BoothSettings {
   if (typeof window === "undefined") return DEFAULT_BOOTH_SETTINGS;
   try {
@@ -19,7 +23,11 @@ export function loadBoothSettings(): BoothSettings {
     if (!raw) return DEFAULT_BOOTH_SETTINGS;
     const parsed: unknown = JSON.parse(raw);
     if (!isRecord(parsed)) return DEFAULT_BOOTH_SETTINGS;
-    return { ...DEFAULT_BOOTH_SETTINGS, ...parsed } as BoothSettings;
+    const merged = { ...DEFAULT_BOOTH_SETTINGS, ...parsed } as BoothSettings;
+    return {
+      ...merged,
+      messageText: sanitizeMessageText(merged.messageText),
+    };
   } catch {
     return DEFAULT_BOOTH_SETTINGS;
   }
@@ -29,6 +37,7 @@ export function saveBoothSettings(settings: BoothSettings) {
   if (typeof window === "undefined") return;
   const safe: BoothSettings = {
     ...settings,
+    messageText: sanitizeMessageText(settings.messageText),
     thermalBrightness: clamp(settings.thermalBrightness, 0.85, 1.18),
     thermalContrast: clamp(settings.thermalContrast, 1.02, 1.48),
   };

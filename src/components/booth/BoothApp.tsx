@@ -205,8 +205,8 @@ export function BoothApp() {
   const [customerLayoutId, setCustomerLayoutId] =
     useState<CustomerLayoutId>("classic");
 
-  const [copies, setCopies] = useState<1 | 2>(1);
-  const [receiptPhotoCount, setReceiptPhotoCount] = useState<ReceiptPhotoCount>(2);
+  const [copies, setCopies] = useState<1 | 2 | 3 | 4>(1);
+  const [receiptPhotoCount, setReceiptPhotoCount] = useState<ReceiptPhotoCount>(1);
   const selectedPreset = useMemo(
     () => getCustomerLayoutPreset(customerLayoutId),
     [customerLayoutId],
@@ -214,7 +214,13 @@ export function BoothApp() {
   const miniGridEnabled = settings.paperWidth === "80mm";
   const availablePhotoCounts = useMemo<readonly ReceiptPhotoCount[]>(
     () =>
-      selectedPreset.id === "mini-grid"
+      selectedPreset.id === "classic" || selectedPreset.id === "bottom-brand"
+        ? ([1] as const)
+        : selectedPreset.id === "six-grid"
+        ? miniGridEnabled
+          ? ([6] as const)
+          : ([] as const)
+        : selectedPreset.id === "mini-grid"
         ? miniGridEnabled
           ? ([4] as const)
           : ([] as const)
@@ -225,12 +231,15 @@ export function BoothApp() {
   );
 
   useEffect(() => {
-    if (!miniGridEnabled && selectedPreset.id === "mini-grid") {
+    if (
+      !miniGridEnabled &&
+      (selectedPreset.id === "mini-grid" || selectedPreset.id === "six-grid")
+    ) {
       setCustomerLayoutId("classic");
       return;
     }
     if (!availablePhotoCounts.includes(receiptPhotoCount)) {
-      setReceiptPhotoCount(availablePhotoCounts[availablePhotoCounts.length - 1] ?? 2);
+      setReceiptPhotoCount(availablePhotoCounts[availablePhotoCounts.length - 1] ?? 1);
     }
   }, [availablePhotoCounts, receiptPhotoCount, miniGridEnabled, selectedPreset.id]);
 
@@ -409,7 +418,7 @@ export function BoothApp() {
     setDigitalSlipError(null);
     setDigitalToken(null);
     setCustomerLayoutId("classic");
-    setReceiptPhotoCount(2);
+    setReceiptPhotoCount(1);
     resetCameraDefaults();
   }, [resetCameraDefaults]);
 

@@ -24,7 +24,7 @@ export function ReceiptBrandBlock({
       </h1>
       {tagline ? (
         <p
-          className={`mt-2 max-w-[18em] text-black/90 ${
+          className={`mt-1 max-w-[18em] text-black/90 ${
             isNarrow ? "text-[7px] leading-relaxed" : "text-[8px] leading-relaxed"
           }`}
           style={{ letterSpacing: "0.04em" }}

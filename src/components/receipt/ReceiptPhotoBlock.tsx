@@ -1,4 +1,3 @@
-import { BOOTH_PHOTO_DISPLAY_SCALE } from "@/constants/booth-photo";
 import type {
   PaperWidth,
   ReceiptPhotoAspect,
@@ -40,35 +39,41 @@ export function ReceiptPhotoBlock({
   thermal = DEFAULT_THERMAL,
 }: ReceiptPhotoBlockProps) {
   const isNarrow = paperWidth === "58mm";
-  const framePadding = isNarrow ? "px-1" : "px-1.5";
   const urls = [photoUrl, ...(additionalPhotoUrls ?? [])];
-  const useGrid = !isNarrow && photoLayout === "mini-grid" && urls.length >= 4;
+  const useGrid6 = !isNarrow && photoLayout === "mini-grid" && urls.length >= 6;
+  const useGrid4 = !isNarrow && photoLayout === "mini-grid" && !useGrid6 && urls.length >= 4;
+  const framePadding = useGrid4 || useGrid6 ? "px-0" : isNarrow ? "px-1" : "px-1.5";
+  const layoutClass = useGrid6
+    ? "grid grid-cols-2 gap-0"
+    : useGrid4
+      ? "grid grid-cols-2 gap-0"
+      : "flex flex-col gap-0.5";
+  const displayUrls = useGrid6 ? urls.slice(0, 6) : useGrid4 ? urls.slice(0, 4) : urls;
 
   return (
     <div className={`w-full ${framePadding}`}>
-      <div className={`items-center ${useGrid ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}`}>
-        {(useGrid ? urls.slice(0, 4) : urls).map((url, index) => (
+      <div className={`items-center ${layoutClass}`}>
+        {displayUrls.map((url, index) => (
           <figure
             key={`${url}-${index}`}
-            className="relative w-full overflow-hidden border border-black"
+            className="relative w-full overflow-hidden"
           >
             {/* Thermal-friendly treatment: monochrome, lifted contrast, subtle grain.
                 Filter must live on the <img> (not a wrapper) so html-to-image / SVG
                 foreignObject captures include the bitmap; filters on parents often raster blank. */}
             <div
-              className="relative w-full bg-white"
+              className="relative w-full overflow-hidden bg-white"
               style={{
-                aspectRatio: useGrid ? "1 / 1" : ASPECT_RATIO_STYLE[photoAspect],
+                aspectRatio: useGrid4 || useGrid6 ? "1 / 1" : ASPECT_RATIO_STYLE[photoAspect],
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={url}
                 alt={index === 0 ? alt : `${alt} ${index + 1}`}
-                className="h-full w-full origin-center object-cover object-center"
+                className="absolute inset-0 block h-full w-full origin-center object-cover object-center"
                 style={{
                   imageRendering: "auto",
-                  transform: `scale(${BOOTH_PHOTO_DISPLAY_SCALE})`,
                   filter: `grayscale(1) contrast(${thermal.contrast}) brightness(${thermal.brightness})`,
                 }}
                 draggable={false}

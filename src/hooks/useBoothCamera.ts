@@ -1,6 +1,5 @@
 "use client";
 
-import { BOOTH_PHOTO_DISPLAY_SCALE } from "@/constants/booth-photo";
 import {
   inferBackCamerasFromDevices,
   type BackLens,
@@ -188,19 +187,36 @@ export function useBoothCamera(): UseBoothCameraResult {
     const w = video.videoWidth;
     const h = video.videoHeight;
     if (!w || !h) return null;
+
+    // Match the booth frame: centered 3:4 portrait crop from the live stream.
+    const targetAspect = 3 / 4;
+    const sourceAspect = w / h;
+    let sx = 0;
+    let sy = 0;
+    let sw = w;
+    let sh = h;
+
+    if (sourceAspect > targetAspect) {
+      // Source is wider: crop horizontal sides.
+      sw = h * targetAspect;
+      sx = (w - sw) / 2;
+    } else if (sourceAspect < targetAspect) {
+      // Source is taller: crop top/bottom.
+      sh = w / targetAspect;
+      sy = (h - sh) / 2;
+    }
+
+    const outW = 1200;
+    const outH = Math.round(outW / targetAspect);
     const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = outW;
+    canvas.height = outH;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-    const s = BOOTH_PHOTO_DISPLAY_SCALE;
-    const dw = w * s;
-    const dh = h * s;
-    const dx = (w - dw) / 2;
-    const dy = (h - dh) / 2;
+
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(video, 0, 0, w, h, dx, dy, dw, dh);
+    ctx.fillRect(0, 0, outW, outH);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
     try {
       return canvas.toDataURL("image/jpeg", 0.92);
     } catch {

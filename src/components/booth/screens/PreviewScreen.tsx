@@ -1,4 +1,3 @@
-import { BOOTH_PHOTO_DISPLAY_SCALE } from "@/constants/booth-photo";
 import { BoothShell } from "@/components/booth/BoothShell";
 import { BoothTapButton } from "@/components/booth/BoothTapButton";
 
@@ -32,13 +31,12 @@ export function PreviewScreen({
         </p>
       </header>
 
-      <div className="overflow-hidden rounded-[1.75rem] bg-[var(--booth-cream)] shadow-inner ring-1 ring-black/5">
+      <div className="overflow-hidden rounded-[1.75rem] bg-black shadow-inner ring-1 ring-black/5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageSrc}
           alt="Your captured photo"
-          className="aspect-[3/4] w-full origin-center object-cover object-center"
-          style={{ transform: `scale(${BOOTH_PHOTO_DISPLAY_SCALE})` }}
+          className="aspect-[3/4] w-full origin-center object-contain object-center"
         />
       </div>
 

@@ -1,5 +1,5 @@
 /**
- * Slightly “stepped back” framing so portraits don’t feel as tight as full-bleed cover.
- * Keep capture (`useBoothCamera`) and on-screen previews aligned to this value.
+ * Keep camera, capture, and post-shot preview aligned.
+ * 1 = no extra zoom transform.
  */
-export const BOOTH_PHOTO_DISPLAY_SCALE = 0.9;
+export const BOOTH_PHOTO_DISPLAY_SCALE = 1;

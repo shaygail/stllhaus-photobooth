@@ -11,7 +11,7 @@ export const receiptPreviewBase: ReceiptPrintProps = {
   dateText: "Sunday 12 April 2026",
   timeText: "4:18 in the afternoon",
   locationText: "New Plymouth, NZ",
-  messageText: "quiet sips, slow moments ☁️",
+  messageText: "quiet sips, slow moments",
   eventText: "STLL HAUS Market Moment",
   websiteText: "stllhaus.co",
   instagramText: "@stllhausco",
@@ -20,7 +20,7 @@ export const receiptPreviewBase: ReceiptPrintProps = {
 };
 
 export const brandMessageOptions: readonly string[] = [
-  "quiet sips, slow moments ☁️",
+  "quiet sips, slow moments",
   "your moment to slow down",
   "crafted for the still moment",
   "made for slow moments",

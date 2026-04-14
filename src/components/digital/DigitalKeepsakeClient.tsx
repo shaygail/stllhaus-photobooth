@@ -367,7 +367,7 @@ export function DigitalKeepsakeClient({ token }: DigitalKeepsakeClientProps) {
             ) : null}
           </div>
           <p className="mt-4 text-center text-xs uppercase tracking-[0.2em] text-stone-500">
-            quiet sips, slow moments ☁️
+            quiet sips, slow moments
           </p>
         </div>
 

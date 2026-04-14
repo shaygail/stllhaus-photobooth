@@ -10,7 +10,7 @@ export type BoothStep =
   | "done";
 
 export type CountdownChoice = 3 | 5 | 10;
-export type ReceiptPhotoCount = 1 | 2 | 3 | 4;
+export type ReceiptPhotoCount = 1 | 2 | 3 | 4 | 6;
 
 export type PrinterProfile = "bluetooth_portable" | "xprinter_80";
 
@@ -66,7 +66,7 @@ export const DEFAULT_BOOTH_SETTINGS: BoothSettings = {
   brandName: "STLL HAUS",
   tagline: "a quiet place, made for slowing down",
   locationText: "New Plymouth, NZ",
-  messageText: "quiet sips, slow moments ☁️",
+  messageText: "quiet sips, slow moments",
   eventLabel: "STLL HAUS Market Moment",
   websiteText: "stllhaus.co",
   instagramText: "@stllhausco",

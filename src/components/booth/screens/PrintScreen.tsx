@@ -3,8 +3,8 @@ import { BoothTapButton } from "@/components/booth/BoothTapButton";
 import type { PrinterConnectionUi } from "@/types/booth";
 
 type PrintScreenProps = {
-  copies: 1 | 2;
-  onCopiesChange: (n: 1 | 2) => void;
+  copies: 1 | 2 | 3 | 4;
+  onCopiesChange: (n: 1 | 2 | 3 | 4) => void;
   printerLabel: string;
   connection: PrinterConnectionUi;
   isPrinting: boolean;
@@ -65,8 +65,8 @@ export function PrintScreen({
         <p className="text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--booth-walnut)]/60">
           Copies
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          {([1, 2] as const).map((n) => (
+        <div className="grid grid-cols-4 gap-2">
+          {([1, 2, 3, 4] as const).map((n) => (
             <button
               key={n}
               type="button"

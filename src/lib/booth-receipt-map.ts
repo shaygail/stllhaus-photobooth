@@ -14,6 +14,8 @@ export function boothSettingsToReceiptProps(
   customerLayoutId?: CustomerLayoutId,
 ): ReceiptPrintLayoutProps {
   const preset = getCustomerLayoutPreset(customerLayoutId);
+  const headerTitle = "STLL SNAPS";
+  const headerTagline = "capture the moment, keep the memory.";
   const showConnect = settings.showConnectBlock;
   const qr =
     showConnect && settings.showQr && settings.qrCodeUrl.trim()
@@ -30,8 +32,8 @@ export function boothSettingsToReceiptProps(
   };
 
   return {
-    brandName: settings.brandName,
-    tagline: settings.tagline,
+    brandName: headerTitle,
+    tagline: headerTagline,
     photoUrl: photoDataUrl,
     additionalPhotoUrls,
     dateText: formatBoothDate(when),
@@ -45,6 +47,7 @@ export function boothSettingsToReceiptProps(
     paperWidth: settings.paperWidth,
     photoAspect: preset.photoAspect,
     photoLayout: preset.photoLayout,
+    layoutVariant: preset.layoutVariant ?? "default",
     display,
     thermal: {
       brightness: settings.thermalBrightness,

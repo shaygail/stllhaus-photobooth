@@ -1,10 +1,17 @@
 import type {
   ReceiptDisplayToggles,
+  ReceiptLayoutVariant,
   ReceiptPhotoAspect,
   ReceiptPhotoLayout,
 } from "@/components/receipt";
 
-export type CustomerLayoutId = "classic" | "soft-square" | "quiet" | "mini-grid";
+export type CustomerLayoutId =
+  | "classic"
+  | "soft-square"
+  | "quiet"
+  | "mini-grid"
+  | "six-grid"
+  | "bottom-brand";
 
 export type CustomerLayoutPreset = {
   id: CustomerLayoutId;
@@ -12,6 +19,7 @@ export type CustomerLayoutPreset = {
   subtitle: string;
   photoAspect: ReceiptPhotoAspect;
   photoLayout: ReceiptPhotoLayout;
+  layoutVariant?: ReceiptLayoutVariant;
   /** Merged over staff toggles for this session’s strip only */
   displayPatch: Partial<ReceiptDisplayToggles>;
 };
@@ -31,6 +39,7 @@ export const CUSTOMER_LAYOUT_PRESETS: readonly CustomerLayoutPreset[] = [
     subtitle: "A little more balance — still long on the roll",
     photoAspect: "1/1",
     photoLayout: "stack",
+    layoutVariant: "bottom-brand",
     displayPatch: {},
   },
   {
@@ -45,11 +54,35 @@ export const CUSTOMER_LAYOUT_PRESETS: readonly CustomerLayoutPreset[] = [
     },
   },
   {
+    id: "bottom-brand",
+    title: "Bottom logo",
+    subtitle: "Date left, small QR right, logo at bottom",
+    photoAspect: "3/4",
+    photoLayout: "stack",
+    layoutVariant: "bottom-brand",
+    displayPatch: {
+      showTagline: false,
+      showMetaBlock: false,
+      showMessageBlock: false,
+      showConnectBlock: false,
+      showEndOrnament: false,
+    },
+  },
+  {
     id: "mini-grid",
     title: "Mini Grid",
     subtitle: "4-photo collage",
     photoAspect: "1/1",
     photoLayout: "mini-grid",
+    displayPatch: {},
+  },
+  {
+    id: "six-grid",
+    title: "Six Grid",
+    subtitle: "6-photo collage",
+    photoAspect: "1/1",
+    photoLayout: "mini-grid",
+    layoutVariant: "bottom-brand",
     displayPatch: {},
   },
 ] as const;
