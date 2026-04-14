@@ -302,7 +302,10 @@ export function BoothApp() {
     ) as HTMLElement | null;
     if (!exportEl) return finalLayoutSnapRef.current;
     for (let i = 0; i < 3; i += 1) {
-      const snap = await captureReceiptPrintRoot(exportEl);
+      const snap = await captureReceiptPrintRoot(exportEl, {
+        pixelRatio: 1.35,
+        quality: 0.84,
+      });
       if (snap) {
         finalLayoutSnapRef.current = snap;
         return snap;

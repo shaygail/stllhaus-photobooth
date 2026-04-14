@@ -15,8 +15,8 @@ const slips = new Map<string, DigitalSlipRecord>();
 
 const MAX_SLIPS = 120;
 const TTL_MS = 24 * 60 * 60 * 1000;
-/** Rough cap on base64 payload length (~1.9MB binary JPEG upper bound). */
-const MAX_DATA_URL_CHARS = 3_200_000;
+/** Allow higher-resolution flattened strips from mobile capture/export pipelines. */
+const MAX_DATA_URL_CHARS = 16_000_000;
 
 function prune() {
   const now = Date.now();
