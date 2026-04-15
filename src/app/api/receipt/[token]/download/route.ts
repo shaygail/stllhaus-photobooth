@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { bufferFromImageDataUrl } from "@/lib/data-url-to-buffer";
-import { getDigitalSlip } from "@/lib/digital-slip-store";
+import { bufferAsResponseBody } from "@/lib/buffer-response-body";
+import { resolveLayoutJpeg } from "@/lib/digital-slip-resolve";
 
 export const runtime = "nodejs";
 
@@ -9,19 +9,19 @@ export async function GET(
   context: { params: Promise<{ token: string }> },
 ) {
   const { token } = await context.params;
-  const slip = getDigitalSlip(token);
-  if (!slip || !slip.layoutDataUrl) {
+  const resolved = await resolveLayoutJpeg(token);
+  if (!resolved) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   try {
-    const body = bufferFromImageDataUrl(slip.layoutDataUrl);
-    const bytes = new Uint8Array(body);
+    const bytes = resolved.bytes;
+    const body = bufferAsResponseBody(bytes);
     const safe = token.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 12) || "receipt";
-    return new NextResponse(bytes, {
+    return new NextResponse(body, {
       status: 200,
       headers: {
         "Content-Type": "image/jpeg",
-        "Content-Length": String(bytes.byteLength),
+        "Content-Length": String(body.byteLength),
         "Content-Disposition": `attachment; filename="stllhaus-receipt-${safe}.jpg"`,
         "Cache-Control": "private, no-store",
       },

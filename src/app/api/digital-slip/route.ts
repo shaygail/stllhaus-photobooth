@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       imageDataUrl?: string;
       layoutDataUrl?: string;
     };
-    const token = createDigitalSlip(body.imageDataUrl ?? "", body.layoutDataUrl);
+    const token = await createDigitalSlip(body.imageDataUrl ?? "", body.layoutDataUrl);
     return NextResponse.json({ token, receiptUrl: `/receipt/${token}` });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Bad request";
@@ -46,7 +46,7 @@ export async function PATCH(request: Request) {
     if (!token || !EMAIL_RE.test(email)) {
       return NextResponse.json({ error: "Invalid token or email" }, { status: 400 });
     }
-    const ok = attachEmailToSlip(token, email);
+    const ok = await attachEmailToSlip(token, email);
     if (!ok) {
       return NextResponse.json({ error: "Slip not found or expired" }, { status: 404 });
     }

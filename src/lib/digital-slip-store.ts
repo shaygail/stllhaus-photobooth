@@ -1,8 +1,15 @@
 /**
- * In-memory store for short-lived digital slips.
- * Works for a single long-running Node process (e.g. `next start` on one device at a stall).
- * For serverless / multi-instance production, replace with KV + object storage.
+ * In-memory store for short-lived digital slips (local / single Node process).
+ * When `BLOB_READ_WRITE_TOKEN` is set, final strips (and optional moment photos)
+ * are also written to Vercel Blob so `/receipt/:token` works across serverless instances.
  */
+
+import {
+  persistLayoutJpegFromDataUrl,
+  persistMomentJpegFromDataUrl,
+  isReceiptBlobPersistenceEnabled,
+  slipExistsInBlob,
+} from "@/lib/receipt-blob-storage";
 
 export type DigitalSlipRecord = {
   imageDataUrl?: string;
@@ -33,11 +40,10 @@ function prune() {
   }
 }
 
-export function createDigitalSlip(
+export async function createDigitalSlip(
   imageDataUrl?: string,
   layoutDataUrl?: string,
-): string {
-  prune();
+): Promise<string> {
   if (imageDataUrl) {
     if (
       typeof imageDataUrl !== "string" ||
@@ -62,21 +68,47 @@ export function createDigitalSlip(
     throw new Error("Layout image too large");
   }
   const token = crypto.randomUUID();
-  slips.set(token, { imageDataUrl, layoutDataUrl, createdAt: Date.now() });
+
+  if (isReceiptBlobPersistenceEnabled()) {
+    await persistLayoutJpegFromDataUrl(token, layoutDataUrl);
+    if (imageDataUrl) {
+      await persistMomentJpegFromDataUrl(token, imageDataUrl);
+    }
+    return token;
+  }
+
+  prune();
+  slips.set(token, {
+    imageDataUrl,
+    layoutDataUrl,
+    createdAt: Date.now(),
+  });
   prune();
   return token;
 }
 
-export function attachEmailToSlip(token: string, email: string): boolean {
+export async function attachEmailToSlip(
+  token: string,
+  email: string,
+): Promise<boolean> {
   const row = slips.get(token);
-  if (!row) return false;
-  if (Date.now() - row.createdAt > TTL_MS) {
-    slips.delete(token);
-    return false;
+  if (row) {
+    if (Date.now() - row.createdAt > TTL_MS) {
+      slips.delete(token);
+      return false;
+    }
+    row.email = email;
+    slips.set(token, row);
+    return true;
   }
-  row.email = email;
-  slips.set(token, row);
-  return true;
+  if (await slipExistsInBlob(token)) {
+    console.info("[digital-slip] email requested (persisted slip)", {
+      token,
+      email,
+    });
+    return true;
+  }
+  return false;
 }
 
 export function getDigitalSlip(token: string): DigitalSlipRecord | null {
