@@ -3,6 +3,7 @@ import { BoothMark } from "@/components/booth/BoothMark";
 import { BoothShell } from "@/components/booth/BoothShell";
 import { BoothTapButton } from "@/components/booth/BoothTapButton";
 import type { BoothStaffPressProps } from "@/components/booth/BoothMark";
+import { formatBoothDate, formatBoothTime } from "@/lib/booth-datetime";
 import type { BackLens } from "@/hooks/useBoothCamera";
 import type { CountdownChoice } from "@/types/booth";
 
@@ -46,6 +47,10 @@ export function CameraScreen({
   staffMarkProps,
 }: CameraScreenProps) {
   const showLens = facingMode === "environment";
+  const now = new Date();
+  const dateText = formatBoothDate(now);
+  const timeText = formatBoothTime(now);
+
   return (
     <BoothShell className="flex flex-col gap-5">
       <header className="flex items-center justify-between gap-3">
@@ -60,37 +65,71 @@ export function CameraScreen({
         <span className="w-14" aria-hidden />
       </header>
 
-      <div className="relative flex-1 overflow-hidden rounded-[1.75rem] bg-black shadow-inner ring-1 ring-black/10">
-        <video
-          ref={videoRef}
-          className="relative z-0 h-full min-h-[52vh] w-full origin-center object-cover"
-          style={{ transform: `scale(${BOOTH_PHOTO_DISPLAY_SCALE})` }}
-          playsInline
-          muted
-          autoPlay
-        />
-        {isCounting && countDisplay !== null ? (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/35 backdrop-blur-[2px]">
-            <span className="text-8xl font-light tabular-nums text-white drop-shadow-lg">
-              {countDisplay}
-            </span>
+      <div className="mx-auto w-full max-w-[360px] rounded-[2rem] border border-black/[0.06] bg-[#f2f1ef] p-5 shadow-[0_22px_44px_-24px_rgba(44,38,32,0.45)]">
+        <article className="rounded-[1.35rem] border border-black/[0.08] bg-white px-5 pb-5 pt-5">
+          <div className="relative overflow-hidden rounded-sm border border-black/20 bg-black">
+            <div className="relative aspect-[3/4] w-full">
+              <video
+                ref={videoRef}
+                className="absolute inset-0 z-0 h-full w-full origin-center object-cover"
+                style={{ transform: `scale(${BOOTH_PHOTO_DISPLAY_SCALE})` }}
+                playsInline
+                muted
+                autoPlay
+              />
+              {isCounting && countDisplay !== null ? (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/35 backdrop-blur-[2px]">
+                  <span className="text-8xl font-light tabular-nums text-white drop-shadow-lg">
+                    {countDisplay}
+                  </span>
+                </div>
+              ) : null}
+              {error ? (
+                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 overflow-y-auto bg-[var(--booth-oat)]/97 px-5 py-8 text-center">
+                  <p className="text-base font-semibold text-[var(--booth-ink)]">
+                    Camera can&apos;t start
+                  </p>
+                  <p className="max-w-sm text-sm leading-relaxed text-[var(--booth-walnut)]">
+                    {error}
+                  </p>
+                </div>
+              ) : null}
+              {!hasStream && !error ? (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--booth-oat)] text-sm text-[var(--booth-walnut)]">
+                  {isStarting ? "Opening camera…" : "Preparing preview…"}
+                </div>
+              ) : null}
+            </div>
           </div>
-        ) : null}
-        {error ? (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 overflow-y-auto bg-[var(--booth-oat)]/97 px-5 py-8 text-center">
-            <p className="text-base font-semibold text-[var(--booth-ink)]">
-              Camera can&apos;t start
-            </p>
-            <p className="max-w-sm text-sm leading-relaxed text-[var(--booth-walnut)]">
-              {error}
-            </p>
-          </div>
-        ) : null}
-        {!hasStream && !error ? (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--booth-oat)] text-sm text-[var(--booth-walnut)]">
-            {isStarting ? "Opening camera…" : "Preparing preview…"}
-          </div>
-        ) : null}
+
+          <div className="mt-3 h-px w-full bg-black/25" />
+
+          <section className="mt-3 grid grid-cols-[1fr_auto_1fr] items-end gap-3 text-left">
+            <div className="flex justify-start">
+              <p className="pb-0.5 text-[8px] font-medium tracking-[0.08em] text-black/90">
+                stllhausco
+              </p>
+            </div>
+
+            <div className="flex justify-center pb-0.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-black.png"
+                alt="STLL SNAPS"
+                className="h-auto w-14 object-contain"
+                draggable={false}
+              />
+            </div>
+
+            <div className="min-w-0 text-right text-[8px] tracking-[0.08em] text-black/85">
+              <p className="font-semibold uppercase tracking-[0.14em] text-black">
+                {dateText}
+              </p>
+              <p>{timeText}</p>
+              <p>New Plymouth, NZ</p>
+            </div>
+          </section>
+        </article>
       </div>
 
       <section className="space-y-3">
